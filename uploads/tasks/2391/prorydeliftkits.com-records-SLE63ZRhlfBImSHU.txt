@@ -1,0 +1,62 @@
+A Records :
+
+[0] Name : prorydeliftkits.com | ttl: 900 | ip: 209.87.159.203
+
+------------------
+
+AAAA Records: None
+
+------------------
+
+CNAME Records: None
+
+------------------
+
+MX Records :
+
+[0] Name : prorydeliftkits.com | ttl: 1800 | ip: 52.101.8.42 | mx: prorydeliftkits-com.mail.protection.outlook.com. | preference: 0
+
+------------------
+
+NS Records :
+
+[0] Name : prorydeliftkits.com | ttl: 21600 | value: ns3.nexcess.net.
+[1] Name : prorydeliftkits.com | ttl: 21600 | value: ns4.nexcess.net.
+[2] Name : prorydeliftkits.com | ttl: 21600 | value: ns2.nexcess.net.
+[3] Name : prorydeliftkits.com | ttl: 21600 | value: ns1.nexcess.net.
+
+------------------
+
+PTR Records: None
+
+------------------
+
+SRV Records: None
+
+------------------
+
+SOA Records :
+
+[0] Name : prorydeliftkits.com | ttl: 300 | mname: ns1.nexcess.net. | rname: hostmaster.prorydeliftkits.com. | serial: 1676482455 | refresh: 7200 | retry: 2048 | expire: 1048576
+
+------------------
+
+TXT Records :
+
+[0] Name : prorydeliftkits.com | ttl: "1800" | value: "v=spf1 +a +mx +ip4:209.87.159.203 include:spf.protection.outlook.com include:relay.mailchannels.net ~all"
+[1] Name : prorydeliftkits.com | ttl: "300" | value: "MS=ms38934278"
+
+------------------
+
+CAA Records: None
+
+------------------
+
+DS Records: None
+
+------------------
+
+DNSKEY Records: None
+
+------------------
+
