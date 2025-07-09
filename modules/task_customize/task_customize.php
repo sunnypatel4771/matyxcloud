@@ -502,6 +502,14 @@ function task_customize_hook_app_admin_footer()
     if (strpos($viewuri, 'admin/projects') !== false) {
         echo '<script src="' . module_dir_url(TASK_CUSTOMIZE_MODULE_NAME, 'assets/js/project_change.js') . '?v=' . VERSION_TASK_CUSTOMIZE . '"></script>';
     }
+    if (strpos($viewuri, 'task_customize/project_type') !== false) {
+        echo '<script src="' . module_dir_url(TASK_CUSTOMIZE_MODULE_NAME, 'assets/js/project_change.js') . '?v=' . VERSION_TASK_CUSTOMIZE . '"></script>';
+    }
+
+    //group=projects
+    if (strpos($viewuri, 'group=projects') !== false) {
+        echo '<script src="' . module_dir_url(TASK_CUSTOMIZE_MODULE_NAME, 'assets/js/project_change.js') . '?v=' . time() . '"></script>';
+    }
 }
 
 
@@ -566,3 +574,42 @@ function client_add_custome_staff_content($client)
     $CI = &get_instance();
     echo $CI->load->view('task_customize/custome_content',$client);
 }
+
+
+//projects_table_columns
+hooks()->add_action('projects_table_columns', 'task_customize_projects_table_columns');
+function task_customize_projects_table_columns($columns)
+{
+    $columns[] = 'Day Count';
+    return $columns;
+}
+
+//projects_table_sql_columns
+hooks()->add_action('projects_table_sql_columns', 'task_customize_projects_table_sql_columns');
+function task_customize_projects_table_sql_columns($columns)
+{
+    //join table project_timer
+    $columns[] = '1';
+    return $columns;
+}
+
+
+
+function get_active_days($project_id)
+{
+    $CI = &get_instance();
+    $CI->db->where('project_id', $project_id);
+    $timers = $CI->db->get(db_prefix() . 'project_timer')->result();
+
+
+    $total_seconds = 0;
+    foreach ($timers as $timer) {
+        $start = strtotime($timer->start_time);
+        $end = $timer->pause_time ? strtotime($timer->pause_time) : time();
+        $total_seconds += ($end - $start);
+    }
+
+    return floor($total_seconds / 86400); // return days
+}
+
+

@@ -661,4 +661,149 @@ class Task_customize extends AdminController
         }
         echo json_encode(['message' => $message, 'status' => $status]);
     }
+
+
+    public function project_change_custom_notes_field_value($project_id, $custom_field_id)
+    {
+        $CI = &get_instance();
+
+        $value = $CI->input->post('value');
+        //- remove and apply space in value
+
+
+        // Check if custom field value exists
+        $CI->db->where('relid', $project_id);
+        $CI->db->where('fieldid', $custom_field_id);
+        $CI->db->where('fieldto', 'projects');
+        $exists = $CI->db->get(db_prefix() . 'customfieldsvalues')->row();
+
+        if ($exists) {
+            // Update existing value
+            $CI->db->where('relid', $project_id);
+            $CI->db->where('fieldid', $custom_field_id);
+            $CI->db->where('fieldto', 'projects');
+            $CI->db->update(db_prefix() . 'customfieldsvalues', [
+                'value' => $value
+            ]);
+        } else {
+            // Insert new value if doesn't exist
+            $CI->db->insert(db_prefix() . 'customfieldsvalues', [
+                'relid' => $project_id,
+                'fieldid' => $custom_field_id,
+                'fieldto' => 'projects',
+                'value' => $value
+            ]);
+        }
+
+        echo json_encode(array('success' => true, 'message' => 'Project custom field updated successfully'));
+    }
+
+
+    //view_active_days
+    public function view_active_days()
+    {
+        $project_id = $this->input->post('project_id');
+        $CI = &get_instance();
+        $project = $CI->db->where('project_id', $project_id)->get(db_prefix() . 'project_timer')->result_array();
+      
+        $table_data = '';
+        foreach ($project as $timer) {
+            $table_data .= '<tr>';
+            $table_data .= '<td>' . $timer['start_time'] . '</td>';
+            $table_data .= '<td>' . $timer['pause_time'] . '</td>';
+            $table_data .= '<td class="text-right">
+                <a href="javascript:void(0);" class="text-success" onclick="edit_custome_project_timer(' . $timer['id'] . ',' . $timer['project_id'] . '); return false;"><i class="fa fa-pencil"></i></a>
+                <a href="javascript:void(0);" class="text-danger" onclick="delete_custome_project_timer(' . $timer['id'] . ',' . $timer['project_id'] . '); return false;"><i class="fa fa-trash"></i></a>
+            </td>';
+            $table_data .= '</tr>';
+        }
+        $response = [
+            'table_data' => $table_data,
+            'day_count' => get_active_days($project_id),
+             'status' => true
+        ];
+        echo json_encode($response);
+    }
+
+    //edit_custome_project_timer
+    public function save_custome_project_timer()
+    {
+        $CI = &get_instance();
+        $timer_id = $this->input->post('timer_id');
+        $date = DateTime::createFromFormat('m-d-Y h:i A', $this->input->post('start_time'));
+        $start_time = $date->format('Y-m-d H:i:s');
+        $date = DateTime::createFromFormat('m-d-Y h:i A', $this->input->post('pause_time'));
+        $pause_time = $date->format('Y-m-d H:i:s');
+        $project_id = $this->input->post('project_id');
+
+        //check start time not small that pause time
+        if($start_time > $pause_time){
+            echo json_encode(array('success' => false, 'message' => 'Start time should be less than pause time'));
+            return;
+        }
+
+        //check that alredy same time in that project 
+        $CI->db->where('project_id', $project_id);
+        $CI->db->where('start_time <', $pause_time);
+        $CI->db->where('pause_time >', $start_time);
+        $exists = $CI->db->get(db_prefix() . 'project_timer')->row();
+        if($exists){
+            echo json_encode(array('success' => false, 'message' => 'Time slot already exists'));
+            return;
+        }
+
+
+        if($timer_id > 0){
+            $CI->db->where('id', $timer_id);
+            $CI->db->update(db_prefix() . 'project_timer', [
+                'start_time' => $start_time,
+                'pause_time' => $pause_time
+            ]);
+        } else{
+            $CI->db->insert(db_prefix() . 'project_timer', [
+                'project_id' => $project_id,
+                'start_time' => $start_time,
+                'pause_time' => $pause_time
+            ]);
+        }
+
+        echo json_encode(array('success' => true, 'message' => 'Project timer updated successfully'));
+    }
+
+    //get_custome_project_timer
+    public function get_custome_project_timer()
+    {
+        $CI = &get_instance();
+        $timer_id = $this->input->post('timer_id');
+        $CI->db->where('id', $timer_id);
+        $timer = $CI->db->get(db_prefix() . 'project_timer')->row();
+        if($timer){
+            $date = DateTime::createFromFormat('Y-m-d H:i:s', $timer->start_time);
+            $start_time = $date->format('m-d-Y h:i A');
+            $date = DateTime::createFromFormat('Y-m-d H:i:s', $timer->pause_time);
+            $pause_time = $date->format('m-d-Y h:i A');
+            $response = [
+                'timer' => $timer,
+                'start_time' => $start_time,
+                'pause_time' => $pause_time,
+                'status' => true
+            ];
+        } else {
+            $response = [
+                'status' => false
+            ];
+        }
+        echo json_encode($response);
+    }
+
+
+    // delete_custome_project_timer
+    public function delete_custome_project_timer()
+    {
+        $CI = &get_instance();
+        $timer_id = $this->input->post('timer_id');
+        $CI->db->where('id', $timer_id);
+        $CI->db->delete(db_prefix() . 'project_timer');
+        echo json_encode(array('status' => true, 'message' => 'Project timer deleted successfully'));
+    }
 }

@@ -85,11 +85,34 @@
 
 
                                 ?>
-                                <!-- make chat icon so that it can open chat modal margin right 10px -->
-                                <a href="javascript:void(0)" data-project-id="<?php echo e($project->id); ?>"
-                                    class="tw-text-xl chat-icon" style="margin: 0px 5px auto 5px;">
-                                    <i class="fa-solid fa-comments"></i>
+
+                                <!-- //add chat icon with modal open  -->
+                                <a href="javascript:void(0);" data-toggle="modal" data-target="#project-comment-modal"
+                                    class="tw-ml-2 tw-text-neutral-500 hover:tw-text-neutral-700">
+                                    <i class="fa fa-comment"></i>
                                 </a>
+
+                                <div class="tw-ml-2 play_pause_section">
+                                <?php
+                                if ($project->status != '4' && $project->status != '5') {
+                                    $this->db->where('project_id', $project->id);
+                                    $this->db->where('pause_time', null);
+                                    $active_timer = $this->db->get('tblproject_timer')->row();
+
+                                    if ($active_timer) {
+                                        // Timer is running — show pause icon
+                                        echo '<a href="javascript:void(0);" class="btn btn-warning" onclick="toggleProjectTimer(' . $project->id . ')">
+                                               <i class="fa fa-pause"></i>
+                                               </a>';
+                                    } else {
+                                        // Timer is paused or not started — show play icon
+                                        echo '<a href="javascript:void(0);" class="btn btn-success" onclick="toggleProjectTimer(' . $project->id . ')">
+                                               <i class="fa fa-play"></i>
+                                               </a>';
+                                    }
+                                }
+                                ?>
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-5 text-right tw-space-x-1">
@@ -263,25 +286,49 @@
     </div>
     <!-- /.modal-dialog -->
 </div>
-<!-- /.modal -->
 
-<div class="modal fade" id="chat-modal" tabindex="-1" role="dialog">
+
+
+<div class="modal fade" id="project-comment-modal" tabindex="-1" role="dialog" aria-labelledby="project-comment-modal"
+    aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
+            <?php echo form_open(admin_url('task_customize/add_project_comments'), ['id' => 'project-comment-form']); ?>
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
-                        aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title"><?php echo _l('chat'); ?></h4>
+                <h4 class="modal-title">Add Comments</h4>
             </div>
             <div class="modal-body">
-                <div id="chat-messages"></div>
+
+
+
+
+
+                <div class="form-group">
+                    <textarea name="comment" id="comment" class="form-control" rows="5"></textarea>
+                </div>
+                <input type="hidden" name="projectid" id="project_id_comment">
+                <!-- add section for project comment history  -->
+                <div class="project-comment-history">
+                    <div class="project-comment-history-header">
+                        <h4>Comments History</h4>
+                    </div>
+                    <div class="project-comment-history-body">
+
+                    </div>
+                </div>
+                <!-- end project comment history section  -->
             </div>
             <div class="modal-footer">
-                <input type="text" id="chat-message" class="form-control" placeholder="<?php echo _l('message'); ?>">
-                <button type="button" class="btn btn-primary" id="send-message"><?php echo _l('send'); ?></button>
+                <button type="button" class="btn btn-default"
+                    data-dismiss="modal"><?php echo _l('close'); ?></button>
+                <button type="submit" class="btn btn-info"><?php echo _l('submit'); ?></button>
             </div>
+            <?php echo form_close(); ?>
         </div>
     </div>
+</div>
+
+<!-- /.modal -->
 <?php if (isset($discussion)) {
     echo form_hidden('discussion_id', $discussion->id);
     echo form_hidden('discussion_user_profile_image_url', $discussion_user_profile_image_url);
@@ -300,6 +347,7 @@ echo form_hidden('project_percent', $percent);
     taskid = '<?php echo $this->input->get('taskid'); ?>';
 </script>
 <script>
+    init_editor("#comment");
     var gantt_data = {};
     <?php if (isset($gantt_data)) { ?>
         gantt_data = <?php echo json_encode($gantt_data); ?>;
@@ -311,7 +359,33 @@ echo form_hidden('project_percent', $percent);
     if (typeof(discussion_id) != 'undefined') {
         discussion_comments('#discussion-comments', discussion_id, 'regular');
     }
+
+    
+    function toggleProjectTimer(project_id) {
+            
+            $.post(admin_url + 'task_customize/toggle_project_timer', {
+                project_id: project_id
+            }).done(function(response) {
+                var res = JSON.parse(response);
+                if (res.status == true) {
+                    if (res.status == 1) {
+                        alert_float('success', res.message);
+                        // play_pause_section refresh
+                        $('.play_pause_section').load(location.href + ' .play_pause_section');
+                        $('.project-overview-active-days').load(location.href + ' .project-overview-active-days>*', '');
+                    } else {
+                        alert_float('danger', res.message);
+                    }
+                }
+            });
+        }
+
     $(function() {
+
+
+
+
+
         var project_progress_color =
             '<?php echo hooks()->apply_filters('admin_project_progress_color', '#84c529'); ?>';
         var circle = $('.project-progress').circleProgress({
@@ -323,15 +397,57 @@ echo form_hidden('project_percent', $percent);
         });
 
 
-        // chat icon
-        $('.chat-icon').click(function() {
-            var project_id = $(this).data('project-id');
-            // make ajax call and get datab and papned to chat modal    
-            $.ajax({
-                url: admin_url + 'task_customize/get_project_data/' + project_id,
-                type: 'GET',
-                success: function(response) {
-                    $('#chat-modal').modal('show');
+
+
+
+
+
+
+        //set task id on modal open
+        $('#project-comment-modal').on('show.bs.modal', function(event) {
+
+            var project_id = <?php echo $project->id; ?>;
+
+            // //get project comments
+            $.post(admin_url + 'task_customize/get_project_comments', {
+                project_id: project_id
+            }).done(function(response) {
+                var res = JSON.parse(response);
+                if (res.status == true) {
+                    var comments = res.comments;
+                    $('.project-comment-history-body').html(comments);
+                }
+            });
+
+            $('#project_id_comment').val(project_id);
+        });
+
+        //model hidden reset form
+        $('#project-comment-modal').on('hidden.bs.modal', function() {
+            $('#project-comment-form').trigger("reset");
+            $('#project-comment-form button[type="submit"]').prop('disabled', false);
+
+        });
+
+        //project-comment-form submit
+        $('#project-comment-form').submit(function(event) {
+            //save button make disabled
+            $('#project-comment-form button[type="submit"]').prop('disabled', true);
+            event.preventDefault();
+            var form = $(this);
+            var url = form.attr('action');
+            var data = form.serialize();
+            $.post(url, data).done(function(success) {
+                var res = JSON.parse(success);
+                if (res.status == true) {
+                    alert_float('success', res.message);
+                    //reload table
+                    $('#project-comment-modal').modal('hide');
+                } else {
+                    //save button make enabled
+                    $('#project-comment-form button[type="submit"]').prop('disabled', false);
+
+                    alert_float('danger', res.message);
                 }
             });
         });

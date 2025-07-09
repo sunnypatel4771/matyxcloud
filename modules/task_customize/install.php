@@ -51,6 +51,12 @@ if (!file_exists($my_project_overview_path)) {
   copy($module_my_project_overview_path, $my_project_overview_path);
 }
 
+$my_project_groups_path = APPPATH . 'views/admin/clients/groups/my_projects.php';
+$module_my_project_groups_path = module_dir_path(TASK_CUSTOMIZE_MODULE_NAME) . 'system_changes/projects/client_groups/my_projects.php';
+if (!file_exists($my_project_groups_path)) {
+  copy($module_my_project_groups_path, $my_project_groups_path);
+}
+
 //make table qury for projects_notes 
 // CREATE TABLE `tblprojects_notes` (
 //   `id` int(11) NOT NULL AUTO_INCREMENT,

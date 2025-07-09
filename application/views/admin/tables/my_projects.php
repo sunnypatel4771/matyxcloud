@@ -111,9 +111,13 @@ return App_table::find('projects')
 
             $row[] = e(_d($aRow['deadline']));
 
+            
+
             $membersOutput = '<div class="tw-flex -tw-space-x-1">';
-            $members       = explode(',', $aRow['members']);
             $exportMembers = '';
+            if($aRow['members'] != ''){
+            $members       = explode(',', $aRow['members']);
+            
             foreach ($members as $key => $member) {
                 if ($member != '') {
                     $members_ids = explode(',', $aRow['members_ids']);
@@ -128,6 +132,7 @@ return App_table::find('projects')
                     // For exporting
                     $exportMembers .= $member . ', ';
                 }
+            }
             }
 
             $membersOutput .= '<span class="hide">' . trim($exportMembers, ', ') . '</span>';
@@ -246,7 +251,11 @@ return App_table::find('projects')
                 }else if ($customFieldColumn['id'] == PROJECT_STATUS_NOTE && staff_can('edit',  'projects')) {
                      //make text area  when typing save in database
                     /* <textarea class="form-control status_notes" rows="3"  data-custom-field-id="' . $customFieldColumn['id'] . '" data-project-id="' . $aRow['id'] . '">' . $aRow[$customFieldColumn['name']] . '</textarea> */
-                     $row[] = '<a href="javascript:void(0);" class="project_status_note" data-project-id="' . $aRow['id'] . '" ><i class="fa fa-comment"></i></a>';
+                    //  $row[] = '<a href="javascript:void(0);" class="project_status_note" data-custom-field-id="' . $customFieldColumn['id'] . '" data-custom-field-value="' . $aRow[$customFieldColumn['name']] . '" data-project-id="' . $aRow['id'] . '" ><i class="fa fa-comment"></i></a>';
+                    $row[] = '<a href="javascript:void(0);" 
+                    class="tw-ml-2 tw-text-neutral-500 hover:tw-text-neutral-700 project_status_note" data-custom-field-id="' . $customFieldColumn['id'] . '" data-custom-field-value="' . $aRow[$customFieldColumn['name']] . '" data-project-id="' . $aRow['id'] . '">
+                    <i class="fa fa-comment"></i>
+                </a>';
                 }else if ($customFieldColumn['id'] == PROJECT_LAUNCH_ETA && staff_can('edit',  'projects')) {
                     $row[] = '<input name="project_launch_eta" tabindex="-1"
                             value="' . $aRow[$customFieldColumn['name']] . '"
@@ -257,6 +266,8 @@ return App_table::find('projects')
                     $row[] = (strpos($customFieldColumn['name'], 'date_picker_') !== false ? _d($aRow[$customFieldColumn['name']]) : $aRow[$customFieldColumn['name']]);
                 }
             }
+
+            $row[] = get_active_days($aRow['id']);
 
             $row['DT_RowClass'] = 'has-row-options';
 

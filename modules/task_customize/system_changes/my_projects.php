@@ -111,6 +111,8 @@ return App_table::find('projects')
 
             $row[] = e(_d($aRow['deadline']));
 
+            
+
             $membersOutput = '<div class="tw-flex -tw-space-x-1">';
             $members       = explode(',', $aRow['members']);
             $exportMembers = '';
@@ -245,11 +247,20 @@ return App_table::find('projects')
                     $row[] = $outputCustomPriority;
                 }else if ($customFieldColumn['id'] == PROJECT_STATUS_NOTE && staff_can('edit',  'projects')) {
                      //make text area  when typing save in database
-                     $row[] = '<textarea class="form-control status_notes" rows="3"  data-custom-field-id="' . $customFieldColumn['id'] . '" data-project-id="' . $aRow['id'] . '">' . $aRow[$customFieldColumn['name']] . '</textarea>';
+                    /* <textarea class="form-control status_notes" rows="3"  data-custom-field-id="' . $customFieldColumn['id'] . '" data-project-id="' . $aRow['id'] . '">' . $aRow[$customFieldColumn['name']] . '</textarea> */
+                     $row[] = '<a href="javascript:void(0);" class="project_status_note" data-custom-field-id="' . $customFieldColumn['id'] . '" data-custom-field-value="' . $aRow[$customFieldColumn['name']] . '" data-project-id="' . $aRow['id'] . '" ><i class="fa fa-comment"></i></a>';
+                }else if ($customFieldColumn['id'] == PROJECT_LAUNCH_ETA && staff_can('edit',  'projects')) {
+                    $row[] = '<input name="project_launch_eta" tabindex="-1"
+                            value="' . $aRow[$customFieldColumn['name']] . '"
+                            id="project_launch_eta"
+                            class="form-control project_launch_eta datepicker pointer tw-text-neutral-800" data-project_id="' . $aRow['id'] . '"
+                        data-field_id="" style="width: 100%;">';
                 }else {
                     $row[] = (strpos($customFieldColumn['name'], 'date_picker_') !== false ? _d($aRow[$customFieldColumn['name']]) : $aRow[$customFieldColumn['name']]);
                 }
             }
+
+            $row[] = get_active_days($aRow['id']);
 
             $row['DT_RowClass'] = 'has-row-options';
 

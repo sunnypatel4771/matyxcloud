@@ -92,27 +92,27 @@
                                     <i class="fa fa-comment"></i>
                                 </a>
 
+                                <?php if (staff_can('edit', 'projects')) { ?>
                                 <div class="tw-ml-2 play_pause_section">
-                                <?php
-                                $this->db->where('project_id', $project->id);
-                                $this->db->where('pause_time', null);
-                                $active_timer = $this->db->get('tblproject_timer')->row();
+                                    <?php if ($project->status != '4' && $project->status != '5') {
+                                        $this->db->where('project_id', $project->id);
+                                        $this->db->where('pause_time', null);
+                                        $active_timer = $this->db->get('tblproject_timer')->row();
 
-                                if ($project->status != '9') {
-                                    if ($active_timer) {
-                                        // Timer is running — show pause icon
-                                        echo '<a href="#" class="btn btn-warning" onclick="toggleProjectTimer(' . $project->id . ')">
+                                        if ($active_timer) {
+                                            // Timer is running — show pause icon
+                                            echo '<a href="javascript:void(0);" class="btn btn-warning" onclick="toggleProjectTimer(' . $project->id . ')">
                                                <i class="fa fa-pause"></i>
                                                </a>';
-                                    } else {
-                                        // Timer is paused or not started — show play icon
-                                        echo '<a href="#" class="btn btn-success" onclick="toggleProjectTimer(' . $project->id . ')">
+                                        } else {
+                                            // Timer is paused or not started — show play icon
+                                            echo '<a href="javascript:void(0);" class="btn btn-success" onclick="toggleProjectTimer(' . $project->id . ')">
                                                <i class="fa fa-play"></i>
                                                </a>';
-                                    }
-                                }
-                                ?>
+                                        }
+                                    } ?>
                                 </div>
+                                <?php } ?>
                             </div>
                         </div>
                         <div class="col-md-5 text-right tw-space-x-1">
@@ -360,24 +360,25 @@ echo form_hidden('project_percent', $percent);
         discussion_comments('#discussion-comments', discussion_id, 'regular');
     }
 
-    
+
     function toggleProjectTimer(project_id) {
-            
-            $.post(admin_url + 'task_customize/toggle_project_timer', {
-                project_id: project_id
-            }).done(function(response) {
-                var res = JSON.parse(response);
-                if (res.status == true) {
-                    if (res.status == 1) {
-                        alert_float('success', res.message);
-                        // play_pause_section refresh
-                        $('.play_pause_section').load(location.href + ' .play_pause_section');
-                    } else {
-                        alert_float('danger', res.message);
-                    }
+
+        $.post(admin_url + 'task_customize/toggle_project_timer', {
+            project_id: project_id
+        }).done(function(response) {
+            var res = JSON.parse(response);
+            if (res.status == true) {
+                if (res.status == 1) {
+                    alert_float('success', res.message);
+                    // play_pause_section refresh
+                    $('.play_pause_section').load(location.href + ' .play_pause_section');
+                    $('.project-overview-active-days').load(location.href + ' .project-overview-active-days>*', '');
+                } else {
+                    alert_float('danger', res.message);
                 }
-            });
-        }
+            }
+        });
+    }
 
     $(function() {
 

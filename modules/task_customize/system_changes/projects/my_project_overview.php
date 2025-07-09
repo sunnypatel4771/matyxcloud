@@ -150,6 +150,15 @@
                                 </dd>
                             </div>
 
+                            <div class="sm:tw-col-span-1 project-overview-active-days">
+                                <dt class="tw-text-sm tw-font-medium tw-text-neutral-500">
+                                    <?php echo _l('project_active_days'); ?>
+                                </dt>
+                                <dd class="tw-mt-1 tw-text-sm tw-text-neutral-900">
+                                    <a href="javascript:void(0);" onclick="view_active_days(<?php echo e($project->id); ?>); return false;"><?php echo e(get_active_days($project->id)); ?></a>
+                                </dd>
+                            </div>
+
                             <div class="sm:tw-col-span-1 project-overview-date-created">
                                 <dt class="tw-text-sm tw-font-medium tw-text-neutral-500">
                                     <?php echo _l('project_datecreated'); ?>
