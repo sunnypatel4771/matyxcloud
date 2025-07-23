@@ -72,6 +72,8 @@ class Books extends AdminController
             'active'       => 1,
             'is_not_staff' => 0,
         ]);
+
+        $data['category_name'] = $this->wikibooks_model->get_category();
         $this->load->view('book', $data);
     }
 

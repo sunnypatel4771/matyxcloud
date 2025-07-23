@@ -57,6 +57,7 @@ class Wikiarticles_model extends App_Model
         }
 
         $dataDB['book_id'] = $book->id;
+        $dataDB['category_id'] = isset($data['category_id']) ? $data['category_id'] : ""; 
 
         $this->db->set('slug', 'UUID()', FALSE);
         
@@ -99,6 +100,7 @@ class Wikiarticles_model extends App_Model
         $dataDB['is_publish'] = isset($data['is_publish']) ? 1 : 0;
         
         $bookId = isset($data['book_id']) ? $data['book_id'] : null;
+        $dataDB['category_id'] = isset($data['category_id']) ? $data['category_id'] : "";
         
         if(!isset($bookId)){
             return false;
@@ -369,6 +371,17 @@ class Wikiarticles_model extends App_Model
             return true;
         }
 
+        return false;
+    }
+
+    public function get_category_id($id){
+        if(is_numeric($id) && $id != ""){
+           $query = $this->db->where('id', $id)->get(db_prefix() . 'wiki_books')->row();
+
+            if(!empty($query)){
+                return $query->category_id;
+            }
+        }
         return false;
     }
 

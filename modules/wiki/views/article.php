@@ -41,6 +41,10 @@
                                     ?>
                                     <?php echo render_select('book_id', $books, array('id', array('name')), 'wiki_book', $selected, []); ?>
                                 </div>
+
+                                <?php $value = isset($article->category_id) ? $article->category_id : "";
+                                echo render_select('category_id', $category_name, ['id', 'name'], _l('category_name'), $value); ?>
+
                                 <?php $attrs = (isset($article) ? array() : array('autofocus'=>true)); ?>
                                 
                                 <?php $value = (isset($article) ? $article->title : ''); ?>

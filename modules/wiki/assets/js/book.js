@@ -3,6 +3,7 @@ $(function(){
 
     appValidateForm($('#form_main'), {
         name: 'required',
+        category_id: 'required',
         short_description: 'required',
         assign_type: 'required',
     });

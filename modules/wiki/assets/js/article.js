@@ -44,6 +44,7 @@ $(function(){
         description: 'required',
         book_id: 'required',
         type: 'required',
+        category_id: 'required',
     });
 
     // remove article
@@ -77,6 +78,25 @@ $(function(){
                 spanAlert.remove();
             }, 3000);
         });
+    });
+
+
+    $('#book_id').on('change', function(){
+        var book = $('#book_id').val();
+        
+        $.ajax({
+            url: admin_url + 'wiki/articles/get_id_for_category',
+            type: 'POST',
+            data: {
+                book:book
+            },
+            dataType: 'json',
+            success:function(res){
+                if(res.success){
+                    $('#category_id').val(res.category).trigger('change');
+                }
+            }
+        })
     });
 
 });

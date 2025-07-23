@@ -103,6 +103,10 @@
                                 </div>
                             </div>
                             <div class="wiki-item-description wiki-article-description">
+                                <div class="wiki-book-category">
+                                    <span><?php echo get_category_name($article['category_id']); ?></span>
+                                </div>
+
                                 <p><?php echo $article['description']; ?></p>
                             </div>
                             <div class="wiki-article-footer">

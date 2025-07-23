@@ -16,7 +16,7 @@ class Wikibooks_model extends App_Model
         $dataDB['name'] = isset($data['name']) ? $data['name'] : '';
         $dataDB['short_description'] = isset($data['short_description']) ? $data['short_description'] : '';
 
-        if(isset($data['assign_type'])){
+        if (isset($data['assign_type'])) {
             switch ($data['assign_type']) {
                 case 'specific_staff':
                     $dataDB['assign_type'] = $data['assign_type'];
@@ -27,7 +27,7 @@ class Wikibooks_model extends App_Model
                     $dataDB['assign_type'] = $data['assign_type'];
                     $dataDB['assign_ids'] = wiki_serialize($data['assign_ids_roles'], 'role_');
                     break;
-                
+
                 default:
                     $dataDB['assign_type'] = $data['assign_type'];
                     $dataDB['assign_ids'] = wiki_serialize([], 'default_');
@@ -37,10 +37,11 @@ class Wikibooks_model extends App_Model
             $dataDB['assign_type'] = $data['assign_type'];
             $dataDB['assign_ids'] = wiki_serialize([], 'default_');
         }
-        
+
         $user = get_staff($this->session->userdata('tfa_staffid'));
         $dataDB['author_id'] = $user->staffid;
-        
+        $dataDB['category_id'] = isset($data['category_id']) ? $data['category_id'] : "";
+
         $this->db->insert(db_prefix() . 'wiki_books', $dataDB);
         $insert_id = $this->db->insert_id();
         if ($insert_id) {
@@ -77,7 +78,7 @@ class Wikibooks_model extends App_Model
         $dataDB['name'] = isset($data['name']) ? $data['name'] : '';
         $dataDB['short_description'] = isset($data['short_description']) ? $data['short_description'] : '';
 
-        if(isset($data['assign_type'])){
+        if (isset($data['assign_type'])) {
             switch ($data['assign_type']) {
                 case 'specific_staff':
                     $dataDB['assign_type'] = $data['assign_type'];
@@ -88,7 +89,7 @@ class Wikibooks_model extends App_Model
                     $dataDB['assign_type'] = $data['assign_type'];
                     $dataDB['assign_ids'] = wiki_serialize($data['assign_ids_roles'], 'role_');
                     break;
-                
+
                 default:
                     $dataDB['assign_type'] = $data['assign_type'];
                     $dataDB['assign_ids'] = wiki_serialize([], 'default_');
@@ -98,9 +99,10 @@ class Wikibooks_model extends App_Model
             $dataDB['assign_type'] = $data['assign_type'];
             $dataDB['assign_ids'] = wiki_serialize([], 'default_');
         }
-        
+
         $user = get_staff($this->session->userdata('tfa_staffid'));
         $dataDB['author_id'] = $user->staffid;
+        $dataDB['category_id'] = isset($data['category_id']) ? $data['category_id'] : "";
 
         $this->db->set('updated_at', 'NOW()', FALSE);
 
@@ -117,7 +119,7 @@ class Wikibooks_model extends App_Model
 
     public function delete($id)
     {
-        if(!isset($this->wikiarticles_model)){
+        if (!isset($this->wikiarticles_model)) {
             $this->load->model('wikiarticles_model');
         }
         $this->wikiarticles_model->delete_by_book($id);
@@ -132,12 +134,13 @@ class Wikibooks_model extends App_Model
         return false;
     }
 
-    public function get_all_books($query = ""){
+    public function get_all_books($query = "")
+    {
         $tblBooks = db_prefix() . 'wiki_books';
         $tblArticles = db_prefix() . 'wiki_articles';
-        
+
         $sqlFilterName = " ";
-        if($query != ""){
+        if ($query != "") {
             $sqlFilterName = " and ( TBLBooks.name LIKE '%" . $query . "%' OR TBLBooks.short_description LIKE '%" . $query . "%' ) ";
         }
 
@@ -166,8 +169,9 @@ class Wikibooks_model extends App_Model
         return array_values($data);
     }
 
-    public function getPermissionClause($tableName, $user = null){
-        if(!isset($user)){
+    public function getPermissionClause($tableName, $user = null)
+    {
+        if (!isset($user)) {
             $user = get_staff($this->session->userdata('tfa_staffid'));
         }
 
@@ -175,9 +179,16 @@ class Wikibooks_model extends App_Model
         $role_pattern = 'role_' . $user->role;
         $staff_pattern = 'staff_' . $user->staffid;
 
-        $sqlFilterPermission = " (" . $tableName . ".author_id = ".$user_id." OR " . $tableName . ".assign_ids LIKE '%".$role_pattern."%' OR " . $tableName . ".assign_ids LIKE '%".$staff_pattern."%') ";
-        
+        $sqlFilterPermission = " (" . $tableName . ".author_id = " . $user_id . " OR " . $tableName . ".assign_ids LIKE '%" . $role_pattern . "%' OR " . $tableName . ".assign_ids LIKE '%" . $staff_pattern . "%') ";
+
         return $sqlFilterPermission;
     }
 
+    public function get_category()
+    {
+        $this->db->select('*')->from(db_prefix() . 'wiki_category');
+        $categories = $this->db->get()->result_array();
+
+        return $categories;
+    }
 }

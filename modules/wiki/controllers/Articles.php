@@ -17,24 +17,24 @@ class Articles extends AdminController
         $data['title'] = _l('wiki_articles_list');
 
         $filter_query = $this->input->get('filter_query');
-        if(!isset($filter_query)){
+        if (!isset($filter_query)) {
             $filter_query = "";
         }
         $filter_book_id = $this->input->get('filter_book_id');
         $filter_book = null;
-        if(!isset($filter_book_id) || $filter_book_id == ""){
+        if (!isset($filter_book_id) || $filter_book_id == "") {
             $filter_book_id = null;
-        }else{
+        } else {
             $filter_book = $this->wikibooks_model->get($filter_book_id);
-            if(!isset($filter_book)){
+            if (!isset($filter_book)) {
                 show_404();
             }
         }
         $filter_is_owner = $this->input->get('filter_is_owner');
-        if(!isset($filter_is_owner)){
+        if (!isset($filter_is_owner)) {
             $filter_is_owner = null;
             $filter_owner_id = null;
-        }else{
+        } else {
             $filter_owner_id = $user->staffid;
         }
 
@@ -73,9 +73,9 @@ class Articles extends AdminController
                 if ($id) {
                     set_alert('success', _l('added_successfully', _l('wiki_article')));
                     $submit_value = $this->input->post('submit');
-                    if(isset($submit_value) && $submit_value == 'SAVE_AND_BUILD'){
+                    if (isset($submit_value) && $submit_value == 'SAVE_AND_BUILD') {
                         redirect(admin_url('wiki/articles/mindmap?article_id=' . $id));
-                    }else{
+                    } else {
                         redirect(admin_url('wiki/articles/article/' . $id));
                     }
                 }
@@ -91,21 +91,21 @@ class Articles extends AdminController
                     set_alert('success', _l('updated_successfully', _l('wiki_article')));
                 }
                 $submit_value = $this->input->post('submit');
-                if(isset($submit_value) && $submit_value == 'SAVE_AND_BUILD'){
+                if (isset($submit_value) && $submit_value == 'SAVE_AND_BUILD') {
                     redirect(admin_url('wiki/articles/mindmap?article_id=' . $id));
-                }else{
+                } else {
                     redirect(admin_url('wiki/articles/article/' . $id));
                 }
             }
         }
         $back_url = $this->input->get('back_url');
-        if(isset($back_url)){
+        if (isset($back_url)) {
             $data['back_url'] = $back_url;
         }
         if ($id == '') {
             $title = _l('wiki_create_article');
             $clone_id = $this->input->get('clone_id');
-            if(isset($clone_id)){
+            if (isset($clone_id)) {
                 $data['article'] = $this->wikiarticles_model->get($clone_id);
                 $data['clone_id'] = isset($data['article']) ? $data['article']->id : null;
             }
@@ -115,6 +115,8 @@ class Articles extends AdminController
         }
         $data['title']                 = $title;
         $data['books']    = $this->wikibooks_model->get_all_books();
+
+        $data['category_name'] = $this->wikibooks_model->get_category();
         $this->load->view('article', $data);
     }
 
@@ -147,14 +149,14 @@ class Articles extends AdminController
     // This is the counter function.. 
     function add_count($id)
     {
-        $cookie_name = 'wiki_article_counter_'.$id;
+        $cookie_name = 'wiki_article_counter_' . $id;
         // load cookie helper
         $this->load->helper('cookie');
         // this line will return the cookie which has slug name
         $check_visitor = $this->input->cookie($cookie_name, TRUE);
         // this line will return the visitor ip address
         $ip = $this->input->ip_address();
-        
+
         if ($check_visitor == false) {
 
             $cookie = array(
@@ -165,11 +167,9 @@ class Articles extends AdminController
             );
 
             $this->input->set_cookie($cookie);
-            
+
             $this->wikiarticles_model->count_view($id);
         }
-
-    
     }
 
     public function countView()
@@ -179,7 +179,7 @@ class Articles extends AdminController
 
                 $articleId = $this->input->post('article_id');
 
-                if(isset($articleId)){
+                if (isset($articleId)) {
                     $this->wikiarticles_model->count_view($articleId);
                 }
 
@@ -216,16 +216,15 @@ class Articles extends AdminController
                 $slug = $this->input->post('slug');
                 $except_id = $this->input->post('except_id');
 
-                if(!isset($except_id)){
+                if (!isset($except_id)) {
                     $except_id = null;
                 }
 
-                if(isset($slug)){
+                if (isset($slug)) {
                     $exist = $this->wikiarticles_model->exist_slug($slug, $except_id);
                 }
 
                 $rs = !$exist;
-
             }
         }
 
@@ -245,16 +244,15 @@ class Articles extends AdminController
 
                 $user = get_staff($this->session->userdata('tfa_staffid'));
 
-                if(isset($is_on) && isset($article_id)){
+                if (isset($is_on) && isset($article_id)) {
                     $article = $this->wikiarticles_model->get($article_id);
-                    if(!isset($article)){
+                    if (!isset($article)) {
                         $rs = false;
-                    }else{
+                    } else {
                         $this->wikiarticles_model->switch_bookmark($user->staffid, $article_id, $is_on);
                         $rs = true;
                     }
                 }
-
             }
         }
 
@@ -267,13 +265,13 @@ class Articles extends AdminController
         $data['title'] = _l('wiki_design_mindmap');
         $article_id = $this->input->get('article_id');
 
-        if(!isset($article_id) || $article_id == ''){
+        if (!isset($article_id) || $article_id == '') {
             show_404();
         }
 
         $article = $this->wikiarticles_model->get($article_id);
 
-        if(!isset($article)){
+        if (!isset($article)) {
             show_404();
         }
 
@@ -291,9 +289,9 @@ class Articles extends AdminController
                 $data = $this->input->post();
 
                 $rs_update = $this->wikiarticles_model->update_mindmap($data);
-                if($rs_update){
+                if ($rs_update) {
                     $rs = true;
-                }else{
+                } else {
                     $rs = false;
                 }
             }
@@ -303,4 +301,17 @@ class Articles extends AdminController
         die();
     }
 
+    public function get_id_for_category(){
+        if($this->input->post()){
+            $book_id = $this->input->post('book');
+            
+            $res = [];
+            if($book_id != "" && is_numeric($book_id)){
+                $category_id = $this->wikiarticles_model->get_category_id($book_id);
+                
+                $res = ['success' => true, 'category' => isset($category_id) ? $category_id : ""];
+            }
+            echo json_encode($res); 
+        }
+    }
 }

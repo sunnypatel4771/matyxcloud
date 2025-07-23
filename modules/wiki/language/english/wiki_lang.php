@@ -65,4 +65,16 @@ $lang['permission_wiki_articles_based_on_assignee']               = 'If staff me
 $lang['get_link'] = 'Get link';
 $lang['get_link_help'] = 'Share link: Anyone on the internet with this link can view';
 
+// wiki_category
+$lang['wiki_category'] = 'Wiki Category';
+$lang['category_name'] = 'Category Name';
+$lang['add_new_category'] = 'Add Category';
+$lang['add_category'] = 'Add Category';
+$lang['edit_category'] = 'Edit Category';
+$lang['update'] = 'Update';
+$lang['category_added_successfully'] = 'Category Added Successfully';
+$lang['category_updated_successfully'] = 'Category Updated Successfully';
+$lang['category_deleted_successfully'] = 'Category Deleted Successfully';
+
+// wiki_category
 

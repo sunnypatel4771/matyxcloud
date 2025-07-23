@@ -16,6 +16,8 @@
                         <?php $attrs = (isset($book) ? array() : array('autofocus'=>true)); ?>
                         <?php $value = (isset($book) ? $book->name : ''); ?>
                         <?php echo render_input('name', 'book_name', $value, 'text', $attrs); ?>
+                        <?php $value = isset($book->category_id) ? $book->category_id : "";
+                        echo render_select('category_id', $category_name, ['id', 'name'], _l('category_name'), $value); ?>
                         <?php $value = (isset($book) ? $book->short_description : ''); ?>
                         <?php echo render_textarea('short_description', 'book_short_description', $value); ?>
                         <label for="specific_staff"><?php echo _l('permisson_for_views'); ?></label>
