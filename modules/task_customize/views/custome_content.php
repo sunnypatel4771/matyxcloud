@@ -24,6 +24,19 @@
      <div class="col-md-12">
 
      <?php  echo render_select('sale_rep_id', $staff, ['staffid', ['firstname', 'lastname']], 'sale_rep_id', $client->sale_rep_id ?? '', []); ?>
+
+     </div>
+     <!-- Content -->
+     <div class="col-md-12">
+
+     <?php  echo render_select('content_id', $staff, ['staffid', ['firstname', 'lastname']], 'content_id', $client->content_id ?? '', []); ?>
+
+     </div>
+     <!-- Web Lead -->
+     <div class="col-md-12">
+
+     <?php  echo render_select('web_lead_id', $staff, ['staffid', ['firstname', 'lastname']], 'web_lead_id', $client->web_lead_id ?? '', []); ?>
+
      </div>
     </div>
 

@@ -14,4 +14,7 @@ $lang['project_active_days'] = 'Day Count';
 $lang['project_overview_start_time'] = 'Start Time';
 $lang['project_overview_end_time'] = 'Pause Time';
 $lang['project_overview_action'] = 'Action';
+$lang['content_id'] = 'Content';
+$lang['web_lead_id'] = 'Web Lead';
+
 

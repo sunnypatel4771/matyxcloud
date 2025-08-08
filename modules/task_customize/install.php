@@ -105,6 +105,12 @@ if (!$CI->db->field_exists('seo_lead_id', db_prefix() . 'clients')) {
 if (!$CI->db->field_exists('sale_rep_id', db_prefix() . 'clients')) {
   $CI->db->query('ALTER TABLE `' . db_prefix() . 'clients` ADD `sale_rep_id` INT(11) NULL DEFAULT;');
 }
+if (!$CI->db->field_exists('content_id', db_prefix() . 'clients')) {
+  $CI->db->query('ALTER TABLE `' . db_prefix() . 'clients` ADD `content_id` INT(11) NULL DEFAULT;');
+}
+if (!$CI->db->field_exists('web_lead_id', db_prefix() . 'clients')) {
+  $CI->db->query('ALTER TABLE `' . db_prefix() . 'clients` ADD `web_lead_id` INT(11) NULL DEFAULT;');
+}
 //tasks
 if (!$CI->db->field_exists('cam_id', db_prefix() . 'tasks')) {
   $CI->db->query('ALTER TABLE `' . db_prefix() . 'tasks` ADD `cam_id` INT(11) NULL DEFAULT;');
@@ -121,6 +127,12 @@ if (!$CI->db->field_exists('seo_lead_id', db_prefix() . 'tasks')) {
 if (!$CI->db->field_exists('sale_rep_id', db_prefix() . 'tasks')) {
   $CI->db->query('ALTER TABLE `' . db_prefix() . 'tasks` ADD `sale_rep_id` INT(11) NULL DEFAULT;');
 }
+if (!$CI->db->field_exists('content_id', db_prefix() . 'tasks')) {
+  $CI->db->query('ALTER TABLE `' . db_prefix() . 'tasks` ADD `content_id` INT(11) NULL DEFAULT;');
+}
+if (!$CI->db->field_exists('web_lead_id', db_prefix() . 'tasks')) {
+  $CI->db->query('ALTER TABLE `' . db_prefix() . 'tasks` ADD `web_lead_id` INT(11) NULL DEFAULT;');
+}
 // projects
 if (!$CI->db->field_exists('cam_id', db_prefix() . 'projects')) {
   $CI->db->query('ALTER TABLE `' . db_prefix() . 'projects` ADD `cam_id` INT(11) NULL DEFAULT;');
@@ -136,6 +148,34 @@ if (!$CI->db->field_exists('seo_lead_id', db_prefix() . 'projects')) {
 }
 if (!$CI->db->field_exists('sale_rep_id', db_prefix() . 'projects')) {
   $CI->db->query('ALTER TABLE `' . db_prefix() . 'projects` ADD `sale_rep_id` INT(11) NULL DEFAULT;');
+}
+if (!$CI->db->field_exists('content_id', db_prefix() . 'projects')) {
+  $CI->db->query('ALTER TABLE `' . db_prefix() . 'projects` ADD `content_id` INT(11) NULL DEFAULT;');
+}
+if (!$CI->db->field_exists('web_lead_id', db_prefix() . 'projects')) {
+  $CI->db->query('ALTER TABLE `' . db_prefix() . 'projects` ADD `web_lead_id` INT(11) NULL DEFAULT;');
+}
+//contracts
+if (!$CI->db->field_exists('cam_id', db_prefix() . 'contracts')) {
+  $CI->db->query('ALTER TABLE `' . db_prefix() . 'contracts` ADD `cam_id` INT(11) NULL DEFAULT;');
+}
+if (!$CI->db->field_exists('optimizer_id', db_prefix() . 'contracts')) {
+  $CI->db->query('ALTER TABLE `' . db_prefix() . 'contracts` ADD `optimizer_id` INT(11) NULL DEFAULT;');
+}
+if (!$CI->db->field_exists('organic_social_id', db_prefix() . 'contracts')) {
+  $CI->db->query('ALTER TABLE `' . db_prefix() . 'contracts` ADD `organic_social_id` INT(11) NULL DEFAULT;');
+}
+if (!$CI->db->field_exists('seo_lead_id', db_prefix() . 'contracts')) {
+  $CI->db->query('ALTER TABLE `' . db_prefix() . 'contracts` ADD `seo_lead_id` INT(11) NULL DEFAULT;');
+}
+if (!$CI->db->field_exists('sale_rep_id', db_prefix() . 'contracts')) {
+  $CI->db->query('ALTER TABLE `' . db_prefix() . 'contracts` ADD `sale_rep_id` INT(11) NULL DEFAULT;');
+}
+if (!$CI->db->field_exists('content_id', db_prefix() . 'contracts')) {
+  $CI->db->query('ALTER TABLE `' . db_prefix() . 'contracts` ADD `content_id` INT(11) NULL DEFAULT;');
+}
+if (!$CI->db->field_exists('web_lead_id', db_prefix() . 'contracts')) {
+  $CI->db->query('ALTER TABLE `' . db_prefix() . 'contracts` ADD `web_lead_id` INT(11) NULL DEFAULT;');
 }
 
 

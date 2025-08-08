@@ -281,6 +281,18 @@
                                 </dt>
                                 <dd class="tw-mt-1 tw-text-sm tw-text-neutral-900"><?php echo isset($project->sale_rep_id) && $project->sale_rep_id != '' ? get_staff_full_name($project->sale_rep_id) : 'N/A'; ?></dd>
                             </div>
+                            <div class="sm:tw-col-span-1 project-overview-content">
+                                <dt class="tw-text-sm tw-font-medium tw-text-neutral-500">
+                                    <?php echo _l('content_id'); ?>
+                                </dt>
+                                <dd class="tw-mt-1 tw-text-sm tw-text-neutral-900"><?php echo isset($project->content_id) && $project->content_id != '' ? get_staff_full_name($project->content_id) : 'N/A'; ?></dd>
+                            </div>
+                            <div class="sm:tw-col-span-1 project-overview-web_lead">
+                                <dt class="tw-text-sm tw-font-medium tw-text-neutral-500">
+                                    <?php echo _l('web_lead_id'); ?>
+                                </dt>
+                                <dd class="tw-mt-1 tw-text-sm tw-text-neutral-900"><?php echo isset($project->web_lead_id) && $project->web_lead_id != '' ? get_staff_full_name($project->web_lead_id) : 'N/A'; ?></dd>
+                            </div>
 
                             <div class="clearfix"></div>
                             <div class="sm:tw-col-span-2 project-overview-description tc-content">

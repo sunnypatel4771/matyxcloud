@@ -520,6 +520,18 @@
                                     <?php echo render_select('sale_rep_id', $staff, ['staffid', ['firstname', 'lastname']], 'sale_rep_id', $client_data->sale_rep_id ?? '', []); ?>
                                 </div>
                             </div>
+                            <div class="row">
+                                <div class="col-md-12">
+
+                                    <?php echo render_select('content_id', $staff, ['staffid', ['firstname', 'lastname']], 'content_id', $client_data->content_id ?? '', []); ?>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+
+                                    <?php echo render_select('web_lead_id', $staff, ['staffid', ['firstname', 'lastname']], 'web_lead_id', $client_data->web_lead_id ?? '', []); ?>
+                                </div>
+                            </div>
                         </div>
 
 
@@ -691,6 +703,14 @@
                                     // seo_lead_id
                                     $('#seo_lead_id').val(data.seo_lead_id);
                                     $('#seo_lead_id').selectpicker('refresh');
+
+                                    // content_id
+                                    $('#content_id').val(data.content_id);
+                                    $('#content_id').selectpicker('refresh');
+
+                                    // web_lead_id
+                                    $('#web_lead_id').val(data.web_lead_id);
+                                    $('#web_lead_id').selectpicker('refresh');
                                 }
 
 
@@ -715,6 +735,10 @@
                                     $('#organic_social_id').selectpicker('refresh');
                                     $('#seo_lead_id').val(data.seo_lead_id);
                                     $('#seo_lead_id').selectpicker('refresh');
+                                    $('#content_id').val(data.content_id);
+                                    $('#content_id').selectpicker('refresh');
+                                    $('#web_lead_id').val(data.web_lead_id);
+                                    $('#web_lead_id').selectpicker('refresh');
 
                                 }
                             }
@@ -736,6 +760,10 @@
                                 $('#organic_social_id').selectpicker('refresh');
                                 $('#seo_lead_id').val(data.seo_lead_id);
                                 $('#seo_lead_id').selectpicker('refresh');
+                                $('#content_id').val(data.content_id);
+                                $('#content_id').selectpicker('refresh');
+                                $('#web_lead_id').val(data.web_lead_id);
+                                $('#web_lead_id').selectpicker('refresh');
                             }
                         });
 

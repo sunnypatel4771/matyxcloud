@@ -1158,6 +1158,26 @@ $task_custom_field_id = isset($task_custom_field['id']) ? $task_custom_field['id
             </h5>
 
         </div>
+        <div class="task-info">
+            <h5 class="task-info-custom-field tw-inline-flex tw-items-center tw-space-x-1.5 task-info-custom-field-content_id">
+                <i class="fa-regular fa-circle fa-fw fa-lg task-info-icon"></i>
+                <?= _l('content_id'); ?>:
+                <span class="tw-text-neutral-800">
+                    <?= isset($task->content_id) && $task->content_id != '' ? get_staff_full_name($task->content_id) : 'N/A'; ?>
+                </span>
+            </h5>
+
+        </div>
+        <div class="task-info">
+            <h5 class="task-info-custom-field tw-inline-flex tw-items-center tw-space-x-1.5 task-info-custom-field-web_lead_id">
+                <i class="fa-regular fa-circle fa-fw fa-lg task-info-icon"></i>
+                <?= _l('web_lead_id'); ?>:
+                <span class="tw-text-neutral-800">
+                    <?= isset($task->web_lead_id) && $task->web_lead_id != '' ? get_staff_full_name($task->web_lead_id) : 'N/A'; ?>
+                </span>
+            </h5>
+
+        </div>
 
         <?php if (staff_can('create', 'tasks') || staff_can('edit', 'tasks')) { ?>
             <div id="inputTagsWrapper" class="taskSingleTasks task-info-tags-edit tw-ml-0.5 tw-mt-2">
