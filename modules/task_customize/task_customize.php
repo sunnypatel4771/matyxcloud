@@ -306,6 +306,16 @@ function task_customize_init_menu_items()
         'icon'     => 'fa-solid fa-globe',
         'href'     => admin_url('task_customize/project_type?type=landing_page'),
     ]);
+
+    // add_customer_profile_tab add
+    $CI->app_tabs->add_customer_profile_tab('status_check', [
+        'name'     => 'Status Check',
+        'icon'     => 'fa-solid fa-tasks',
+        'view'     => 'task_customize/status_check',
+        'position' => 5,
+        'badge'    => [],
+    ]);
+
 }
 
 

@@ -1,10 +1,11 @@
-<?php 
+<?php
 
 
-function get_milestone_data($milestone_id){
+function get_milestone_data($milestone_id)
+{
     if (is_numeric($milestone_id)) {
         $CI = &get_instance();
-        $CI->db->where('id' , $milestone_id);
+        $CI->db->where('id', $milestone_id);
         $data = $CI->db->get(db_prefix() . 'milestones')->result_array();
         if (!empty($data)) {
             $name = isset($data[0]['name']) ? $data[0]['name'] : '';
@@ -14,10 +15,11 @@ function get_milestone_data($milestone_id){
     return '';
 }
 
-function get_milestone_filter_data($project_id){
+function get_milestone_filter_data($project_id)
+{
     $CI = &get_instance();
     $CI->db->select('id, name');
-        $CI->db->where('project_id' , $project_id);
+    $CI->db->where('project_id', $project_id);
     $data = $CI->db->get(db_prefix() . 'milestones')->result_array();
     return $data;
 }
@@ -68,9 +70,9 @@ function init_relation_tasks_table_change($table_attributes = [], $filtersWrappe
 
     foreach ($custom_fields as $field) {
         array_push($table_data, [
-           'name'     => $field['name'],
-           'th_attrs' => ['data-type' => $field['type'], 'data-custom-field' => 1],
-       ]);
+            'name'     => $field['name'],
+            'th_attrs' => ['data-type' => $field['type'], 'data-custom-field' => 1],
+        ]);
     }
 
     $table_data = hooks()->apply_filters('tasks_related_table_columns', $table_data);
@@ -79,7 +81,7 @@ function init_relation_tasks_table_change($table_attributes = [], $filtersWrappe
     if ($table_attributes['data-new-rel-type'] == 'lead') {
         $name = 'rel-tasks-leads';
     }
-    
+
     $tasks_table = App_table::find('related_tasks');
 
     $table      = '';
@@ -87,9 +89,9 @@ function init_relation_tasks_table_change($table_attributes = [], $filtersWrappe
     $table_name = '.table-' . $name;
 
     $CI->load->view('admin/tasks/filters', [
-        'tasks_table'=>$tasks_table,
-        'filters_wrapper_id'=>$filtersWrapperId,
-        'detached'=>$filtersDetached,
+        'tasks_table' => $tasks_table,
+        'filters_wrapper_id' => $filtersWrapperId,
+        'detached' => $filtersDetached,
     ]);
 
     if (staff_can('create',  'tasks')) {
@@ -120,10 +122,10 @@ function init_relation_tasks_table_change($table_attributes = [], $filtersWrappe
         foreach ($milestone_dropdown_data as $key => $value) {
             $dropdown_html .= "<option value='" . $value['id'] . "'>" . $value['name'] . "</option>";
         }
-        
-        $milestone_dropdown = "<select id='milstone_name' name='milstone_name' class='selectpicker' onchange=\"dt_custom_view($(this).val(), '.table-rel-tasks','milstone_name'); return false;\">". $dropdown_html ."</select>";
 
-        echo '<div style="width: 15%; display: inline-block; float: right;" class="_filters hidden_inputs">'.$milestone_dropdown . '</div>';
+        $milestone_dropdown = "<select id='milstone_name' name='milstone_name' class='selectpicker' onchange=\"dt_custom_view($(this).val(), '.table-rel-tasks','milstone_name'); return false;\">" . $dropdown_html . "</select>";
+
+        echo '<div style="width: 15%; display: inline-block; float: right;" class="_filters hidden_inputs">' . $milestone_dropdown . '</div>';
         echo '<div class="_hidden_inputs _filters _tasks_filters">';
         echo form_hidden('milstone_name');
         echo '</div>';
@@ -196,26 +198,28 @@ function init_relation_tasks_table_change($table_attributes = [], $filtersWrappe
     return $table;
 }
 
-function get_task_detail($task_id){
+function get_task_detail($task_id)
+{
     if (is_numeric($task_id)) {
         $CI = &get_instance();
         $CI->db->select('*');
-        $CI->db->where('id' , $task_id);
+        $CI->db->where('id', $task_id);
         $data = $CI->db->get(db_prefix() . 'tasks')->result_array();
-        return $data;        
+        return $data;
     }
     return [];
 }
 
-function task_custom_field($task_id){
+function task_custom_field($task_id)
+{
     if (is_numeric($task_id) && $task_id != '') {
         $CI = &get_instance();
-        $CI->db->select(db_prefix().'customfields.id, '. db_prefix().'customfieldsvalues.value, '. db_prefix().'customfields.name'); 
-        $CI->db->join(db_prefix().'customfieldsvalues', db_prefix().'customfieldsvalues.fieldid = '.db_prefix().'customfields.id');
-        $CI->db->where(db_prefix().'customfields.name', 'Work Planned');
-        $CI->db->where(db_prefix().'customfieldsvalues.fieldto', 'tasks');
-        $CI->db->where(db_prefix().'customfieldsvalues.relid ', $task_id);
-        $task_custom_data = $CI->db->get(db_prefix().'customfields')->result_array();
+        $CI->db->select(db_prefix() . 'customfields.id, ' . db_prefix() . 'customfieldsvalues.value, ' . db_prefix() . 'customfields.name');
+        $CI->db->join(db_prefix() . 'customfieldsvalues', db_prefix() . 'customfieldsvalues.fieldid = ' . db_prefix() . 'customfields.id');
+        $CI->db->where(db_prefix() . 'customfields.name', 'Work Planned');
+        $CI->db->where(db_prefix() . 'customfieldsvalues.fieldto', 'tasks');
+        $CI->db->where(db_prefix() . 'customfieldsvalues.relid ', $task_id);
+        $task_custom_data = $CI->db->get(db_prefix() . 'customfields')->result_array();
         if (!empty($task_custom_data) && isset($task_custom_data[0]) && !empty($task_custom_data[0])) {
             $task_custom_data = $task_custom_data[0];
             return $task_custom_data;
@@ -237,10 +241,11 @@ function task_custom_field($task_id){
 //     die;
 // }
 
-function formatDate($date) {
+function formatDate($date)
+{
     // Check if the date is already in Y-m-d format
     $d = DateTime::createFromFormat('Y-m-d', $date);
-    
+
     if ($d && $d->format('Y-m-d') === $date) {
         return $date; // Already in correct format
     }
@@ -258,25 +263,26 @@ function formatDate($date) {
     return $$date; // Invalid date
 }
 
-function update_custom_field_value($task_id , $value , $field_id){
+function update_custom_field_value($task_id, $value, $field_id)
+{
 
     if ($field_id == '') {
         $field_id = WORK_PLANNED;
     }
 
-    $CI =& get_instance();
+    $CI = &get_instance();
     $CI->db->where('fieldto', 'tasks');
     $CI->db->where('relid', $task_id);
     $CI->db->where('fieldid', $field_id);
-    $query = $CI->db->get(db_prefix().'customfieldsvalues');
+    $query = $CI->db->get(db_prefix() . 'customfieldsvalues');
     $value = formatDate($value);
     if ($query->num_rows() > 0) {
         $CI->db->where('fieldto', 'tasks');
         $CI->db->where('relid', $task_id);
         $CI->db->where('fieldid', $field_id);
-        $CI->db->update(db_prefix().'customfieldsvalues', ['value' => $value]);
+        $CI->db->update(db_prefix() . 'customfieldsvalues', ['value' => $value]);
     } else {
-        $CI->db->insert(db_prefix().'customfieldsvalues', [
+        $CI->db->insert(db_prefix() . 'customfieldsvalues', [
             'fieldto' => 'tasks',
             'relid' => $task_id,
             'fieldid' => $field_id,
@@ -312,7 +318,6 @@ function my_tasks_rel_name_select_query()
          CONCAT(' . db_prefix() . 'expenses_categories.name, \' (\',' . db_prefix() . 'expenses.expense_name,\')\') END FROM ' . db_prefix() . 'expenses JOIN ' . db_prefix() . 'expenses_categories ON ' . db_prefix() . 'expenses_categories.id = ' . db_prefix() . 'expenses.category WHERE ' . db_prefix() . 'expenses.id=' . db_prefix() . 'tasks.rel_id)
         ELSE NULL
         END)';
-
 }
 
 
@@ -325,7 +330,7 @@ function my_get_relation_values($relation, $type)
             'link'      => '',
             'addedfrom' => 0,
             'subtext'   => '',
-            ];
+        ];
     }
 
     $addedfrom = 0;
@@ -502,12 +507,140 @@ function my_get_relation_values($relation, $type)
     ]);
 }
 
+function init_customer_relation_tasks_table($table_attributes = [], $filtersWrapperId = 'vueApp')
+{
+    $table_data = [
+        _l('the_number_sign'),
+        [
+            'name'     => _l('tasks_dt_name'),
+            'th_attrs' => [
+                'style' => 'width:200px',
+            ],
+        ],
+        _l('task_status'),
+        [
+            'name'     => _l('tasks_dt_datestart'),
+            'th_attrs' => [
+                'style' => 'width:75px',
+            ],
+        ],
+        [
+            'name'     => _l('task_duedate'),
+            'th_attrs' => [
+                'style' => 'width:75px',
+                'class' => 'duedate',
+            ],
+        ],
+        [
+            'name'     => _l('task_assigned'),
+            'th_attrs' => [
+                'style' => 'width:75px',
+            ],
+        ],
+        _l('tags'),
+        _l('tasks_list_priority'),
+    ];
+
+    array_unshift($table_data, [
+        'name'     => '<span class="hide"> - </span><div class="checkbox mass_select_all_wrap"><input type="checkbox" id="mass_select_all" data-to-table="rel-tasks"><label></label></div>',
+        'th_attrs' => ['class' => ($table_attributes['data-new-rel-type'] !== 'project' ? 'not_visible' : '')],
+    ]);
+
+    $custom_fields = get_custom_fields('tasks', [
+        'show_on_table' => 1,
+    ]);
+
+    foreach ($custom_fields as $field) {
+        array_push($table_data, [
+            'name'     => $field['name'],
+            'th_attrs' => ['data-type' => $field['type'], 'data-custom-field' => 1],
+        ]);
+    }
+
+    $table_data = hooks()->apply_filters('tasks_related_table_columns', $table_data);
+
+    $name = 'rel-tasks';
+    if ($table_attributes['data-new-rel-type'] == 'lead') {
+        $name = 'rel-tasks-leads';
+    }
+
+    $tasks_table = App_table::find('related_tasks');
+
+    $table      = '';
+    $CI         = &get_instance();
+    $table_name = '.table-' . $name;
+
+    $CI->load->view('admin/tasks/filters', [
+        'tasks_table' => $tasks_table,
+        'filters_wrapper_id' => $filtersWrapperId,
+    ]);
+
+    if (staff_can('create',  'tasks')) {
+        $disabled   = '';
+        $table_name = addslashes($table_name);
+        if ($table_attributes['data-new-rel-type'] == 'customer' && is_numeric($table_attributes['data-new-rel-id'])) {
+            if (total_rows(db_prefix() . 'clients', [
+                'active' => 0,
+                'userid' => $table_attributes['data-new-rel-id'],
+            ]) > 0) {
+                $disabled = ' disabled';
+            }
+        }
+    }
+
+    echo '<div class="_hidden_inputs _filters _tasks_filters">
+
+    <input type="hidden" name="filters[match_type]" value="or">
+    <input type="hidden" name="filters[rules][0][id]" value="name">
+    <input type="hidden" name="filters[rules][0][operator]" value="equal">
+    <input type="hidden" name="filters[rules][0][value]" value="CAM Status Check">
+    <input type="hidden" name="filters[rules][0][has_dynamic_value]" value="false">
+    <input type="hidden" name="filters[rules][0][type]" value="TextRule">
+    </div>';
+
+    if ($table_attributes['data-new-rel-type'] == 'project') {
+        echo "<a href='" . admin_url('tasks/list_tasks?project_id=' . $table_attributes['data-new-rel-id'] . '&kanban=true') . "' class='btn btn-default mright5 mbot15 hidden-xs' data-toggle='tooltip' data-title='" . _l('view_kanban') . "' data-placement='top'><i class='fa-solid fa-grip-vertical'></i></a>";
+        echo "<a href='" . admin_url('tasks/detailed_overview?project_id=' . $table_attributes['data-new-rel-id']) . "' class='btn btn-success pull-rigsht mbot15'>" . _l('detailed_overview') . '</a>';
+        echo '<div class="clearfix"></div>';
+        echo $CI->load->view('admin/tasks/_bulk_actions', ['table' => '.table-rel-tasks'], true);
+        echo $CI->load->view('admin/tasks/_summary', ['rel_id' => $table_attributes['data-new-rel-id'], 'rel_type' => 'project', 'table' => $table_name], true);
+        echo '<a href="#" data-toggle="modal" data-target="#tasks_bulk_actions" class="hide bulk-actions-btn table-btn" data-table=".table-rel-tasks">' . _l('bulk_actions') . '</a>';
+    } elseif ($table_attributes['data-new-rel-type'] == 'customer') {
+        echo '<div class="clearfix"></div>';
+        echo '<div id="tasks_related_filter" class="mtop15">';
+        echo '<p class="bold">' . _l('task_related_to') . ': </p>';
+
+        echo '<div class="checkbox checkbox-inline">
+        <input type="checkbox" checked value="customer" disabled id="ts_rel_to_customer" name="tasks_related_to[]">
+        <label for="ts_rel_to_customer">' . _l('client') . '</label>
+        </div>';
+        echo form_hidden('tasks_related_to');
+        echo '</div>';
+    }
+    echo "<div class='clearfix'></div>";
+
+    // If new column is added on tasks relations table this will not work fine
+    // In this case we need to add new identifier eq task-relation
+    $table_attributes['data-last-order-identifier'] = 'tasks';
+    $table_attributes['data-default-order']         = get_table_last_order('tasks');
+    if ($table_attributes['data-new-rel-type'] != 'project') {
+        echo '<hr />';
+    }
+    $table_attributes['id'] = 'related_tasks';
+
+    $table .= render_datatable($table_data, $name, ['number-index-1'], $table_attributes);
+
+
+    return $table;
+}
+
 //get_comments_count
-function get_comments_count($task_id){
+function get_comments_count($task_id)
+{
     if (is_numeric($task_id)) {
         $CI = &get_instance();
         $CI->db->select('count(*) as total_comments');
-        $CI->db->where('taskid' , $task_id);
+        $CI->db->where('taskid', $task_id);
         $CI->db->from(db_prefix() . 'task_comments');
         $data = $CI->db->get()->result_array();
         if (!empty($data) && isset($data[0]) && !empty($data[0])) {
@@ -633,7 +766,7 @@ function task_data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $w
             update_staff_meta(get_staff_user_id(), $meta_name, json_encode($indexedOnly, JSON_NUMERIC_CHECK));
         }
     }
-   
+
     /*
      * Filtering
      * NOTE this does not match the built-in DataTables filtering which does it
@@ -812,22 +945,21 @@ function task_data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $w
 
 
 // get_client_name
-function get_client_name($rel_type,$rel_id){
-    if($rel_type == 'project'){
-       //get project name
-       $CI = &get_instance();
-       $CI->load->model('projects_model');
-       $project = $CI->projects_model->get($rel_id);
-       return '<a href="'.admin_url('clients/client/'.$project->client_data->userid).'" target="_blank">'.$project->client_data->company.'</a>';
-    }else if($rel_type == 'contract'){
-       //get contract name
-       $CI = &get_instance();
-       $CI->load->model('contracts_model');
-       $contract = $CI->contracts_model->get($rel_id);
-       return '<a href="'.admin_url('clients/client/'.$contract->userid).'" target="_blank">'.$contract->company.'</a>';
-    }else{
+function get_client_name($rel_type, $rel_id)
+{
+    if ($rel_type == 'project') {
+        //get project name
+        $CI = &get_instance();
+        $CI->load->model('projects_model');
+        $project = $CI->projects_model->get($rel_id);
+        return '<a href="' . admin_url('clients/client/' . $project->client_data->userid) . '" target="_blank">' . $project->client_data->company . '</a>';
+    } else if ($rel_type == 'contract') {
+        //get contract name
+        $CI = &get_instance();
+        $CI->load->model('contracts_model');
+        $contract = $CI->contracts_model->get($rel_id);
+        return '<a href="' . admin_url('clients/client/' . $contract->userid) . '" target="_blank">' . $contract->company . '</a>';
+    } else {
         return '';
     }
-    
 }
-?>
