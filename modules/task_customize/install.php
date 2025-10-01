@@ -190,3 +190,14 @@ if (!$CI->db->table_exists(db_prefix() . 'project_timer')) {
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=' . $CI->db->char_set . ';');
 }
+
+if (!$CI->db->table_exists(db_prefix() . 'task_timer')) {
+  $CI->db->query('CREATE TABLE `' . db_prefix() . 'task_timer` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `task_id` int(11) NOT NULL,
+    `start_time` datetime DEFAULT NULL,
+    `end_time` datetime DEFAULT NULL,
+    `staff_id` int(11) NOT NULL,
+    PRIMARY KEY (`id`)
+  ) ENGINE=InnoDB DEFAULT CHARSET=' . $CI->db->char_set . ';');
+}

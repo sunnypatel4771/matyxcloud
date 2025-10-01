@@ -40,7 +40,12 @@
                                 </label>
                             </div>
                         </div>
-                        <div class="form-group select-placeholder f_client_id">
+                        <div style="float: right;margin-top: 5%;">
+                            <a href="<?= admin_url('clients/client/' . $contract->client); ?>" target="_blank">
+                                <?= $contract->company; ?>
+                            </a>
+                        </div>
+                        <div class="form-group select-placeholder f_client_id" style="margin-top: 5%;">
                             <label for="clientid" class="control-label"><span class="text-danger">*
                                 </span><?php echo _l('contract_client_string'); ?></label>
                             <select id="clientid" name="client" data-live-search="true" data-width="100%"

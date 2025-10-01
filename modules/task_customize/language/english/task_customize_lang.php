@@ -17,4 +17,4 @@ $lang['project_overview_action'] = 'Action';
 $lang['content_id'] = 'Content';
 $lang['web_lead_id'] = 'Web Lead';
 
-
+$lang['completed_time'] = 'Completed Time';

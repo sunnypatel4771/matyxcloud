@@ -49,6 +49,9 @@ hooks()->add_action('tasks_table_columns', 'task_customize_tasks_table_columns',
 // $row = hooks()->apply_filters('tasks_table_row_data', $row, $aRow);
 
 hooks()->add_filter('tasks_table_row_data', 'task_customize_tasks_table_row_data', 10, 2);
+hooks()->add_action('after_add_task', 'task_customize_after_add_task', 10, 1);
+hooks()->add_action('before_log_project_activity', 'task_customize_before_log_project_activity', 10, 1);
+
 register_activation_hook(TASK_CUSTOMIZE_MODULE_NAME, 'task_customize_module_activation_hook');
 register_deactivation_hook(TASK_CUSTOMIZE_MODULE_NAME, 'task_customize_module_deactivation_hook');
 
@@ -315,7 +318,6 @@ function task_customize_init_menu_items()
         'position' => 5,
         'badge'    => [],
     ]);
-
 }
 
 
@@ -438,6 +440,12 @@ function task_customize_task_status_changed($data)
             $CI->db->where('fieldto', 'tasks');
             $CI->db->delete(db_prefix() . 'customfieldsvalues');
         }
+
+        if ($status == Tasks_model::STATUS_COMPLETE) {
+            $CI->db->where('task_id', $task_id);
+            $CI->db->update(db_prefix() . 'task_timer', ['end_time' => date('Y-m-d H:i:s')]);
+            $CI->db->insert(db_prefix() . 'task_timer_history', ['task_id' => $task_id, 'end_date' => date('Y-m-d H:i:s')]);
+        }
     }
 }
 
@@ -520,6 +528,11 @@ function task_customize_hook_app_admin_footer()
     if (strpos($viewuri, 'group=projects') !== false) {
         echo '<script src="' . module_dir_url(TASK_CUSTOMIZE_MODULE_NAME, 'assets/js/project_change.js') . '?v=' . time() . '"></script>';
     }
+
+    if (strpos($viewuri, 'group=contracts') !== false) {
+        echo '<script src="' . module_dir_url(TASK_CUSTOMIZE_MODULE_NAME, 'assets/js/contracts.js') . '?v=' . VERSION_TASK_CUSTOMIZE . '"></script>';
+    }
+
 }
 
 
@@ -540,6 +553,20 @@ function task_customize_before_add_task($data)
         //update assignees
         $CI->projects_model->add_edit_members($project_data, $project_id);
     }
+    if($data['custome_customer_id'] != ''){
+        $data['clientid'] = $data['custome_customer_id'];
+    }
+    unset($data['custome_customer_id']);
+    return $data;
+}
+
+hooks()->add_action('before_update_task', 'task_customize_before_update_task');
+function task_customize_before_update_task($data)
+{
+    if($data['custome_customer_id'] != ''){
+        $data['clientid'] = $data['custome_customer_id'];
+    }
+    unset($data['custome_customer_id']);
     return $data;
 }
 
@@ -582,7 +609,7 @@ hooks()->add_action('after_custom_profile_tab_content', 'client_add_custome_staf
 function client_add_custome_staff_content($client)
 {
     $CI = &get_instance();
-    echo $CI->load->view('task_customize/custome_content',$client);
+    echo $CI->load->view('task_customize/custome_content', $client);
 }
 
 
@@ -622,4 +649,78 @@ function get_active_days($project_id)
     return floor($total_seconds / 86400); // return days
 }
 
+function task_customize_after_add_task($data)
+{
+    $CI = &get_instance();
+    $save_data = [
+        'task_id' => $data,
+        'start_time' => date('Y-m-d H:i:s'),
+        'staff_id' => get_staff_user_id()
+    ];
 
+    $CI->db->insert(db_prefix() . 'task_timer', $save_data);
+}
+
+function get_staff_id_by_name($first_name, $last_name)
+{
+    $CI = &get_instance();
+    $CI->db->where('firstname', $first_name);
+    $CI->db->where('lastname', $last_name);
+    $staff = $CI->db->get(db_prefix() . 'staff')->row();
+    return $staff->staffid;
+}
+
+function task_customize_before_log_project_activity($data)
+{
+    if ($data['description_key'] === 'project_activity_added_team_member' || $data['description_key'] === 'project_activity_removed_team_member') {
+        // make seprate name and last name
+        $additional_data = $data['additional_data'];
+        if ($additional_data !== '') {
+
+            $name = explode(' ', $additional_data);
+            $first_name = $name[0];
+            $last_name = $name[1];
+            $get_staff_id_by_name = get_staff_id_by_name($first_name, $last_name);
+
+            $CI = &get_instance();
+            $CI->load->database();
+
+            $project_id = $data['project_id'];
+            $staff_id   = $get_staff_id_by_name; // now we get actual target staff_id
+            $now        = date('Y-m-d H:i:s');
+
+            if (empty($project_id) || empty($staff_id)) {
+                return;
+            }
+
+            if ($data['description_key'] === 'project_activity_added_team_member') {
+                // Avoid duplicate active rows
+                $CI->db->where('project_id', $project_id);
+                $CI->db->where('assigned_id', $staff_id);
+                $CI->db->where('end_time IS NULL', null, false);
+                $exists = $CI->db->count_all_results(db_prefix() . 'project_timer_history');
+
+                if ($exists == 0) {
+                    $insert_data = [
+                        'project_id'   => $project_id,
+                        'assigned_id'  => $staff_id,
+                        'start_time'   => $now,
+                        'created_date' => $now
+                    ];
+                    $CI->db->insert(db_prefix() . 'project_timer_history', $insert_data);
+                }
+            }
+
+            if ($data['description_key'] === 'project_activity_removed_team_member') {
+                $CI->db->where('project_id', $project_id);
+                $CI->db->where('assigned_id', $staff_id);
+                $CI->db->where('end_time IS NULL');
+                $CI->db->update(db_prefix() . 'project_timer_history', [
+                    'end_time' => $now
+                ]);
+            }
+        }
+    }
+
+    return $data;
+}

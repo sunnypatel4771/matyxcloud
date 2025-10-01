@@ -963,3 +963,163 @@ function get_client_name($rel_type, $rel_id)
         return '';
     }
 }
+
+function get_task_latest_completed_time($task_id)
+{
+    $CI = &get_instance();
+
+    $CI->db->select('end_date');
+    $CI->db->where('task_id', $task_id);
+    $CI->db->order_by('end_date', 'desc');
+    $CI->db->limit(1);
+    $task = $CI->db->get(db_prefix() . 'task_timer_history')->row();
+
+    $task_end_time = null;
+    if ($task) {
+        $task_end_time = date('Y-m-d', strtotime($task->end_date));
+    }
+
+    if ($task_end_time == null) {
+        return '';
+    }
+    return $task_end_time;
+}
+
+
+function custom_get_relation_data($type, $customer_id, $rel_id = '', $extra = [])
+{
+    $CI = &get_instance();
+    $q  = '';
+    if ($CI->input->post('q')) {
+        $q = $CI->input->post('q');
+        $q = trim($q);
+    }
+
+    $data = [];
+    if ($type == 'customer' || $type == 'customers') {
+        $where_clients = '';
+
+        if ($q && !$rel_id) {
+            $where_clients .= '(company LIKE "%' . $CI->db->escape_like_str($q) . '%" ESCAPE \'!\' OR CONCAT(firstname, " ", lastname) LIKE "%' . $CI->db->escape_like_str($q) . '%" ESCAPE \'!\' OR email LIKE "%' . $CI->db->escape_like_str($q) . '%" ESCAPE \'!\') AND ' . db_prefix() . 'clients.active = 1';
+        }
+
+        $data = $CI->clients_model->get($rel_id, $where_clients);
+    } elseif ($type == 'contact' || $type == 'contacts') {
+        if ($rel_id != '') {
+            $data = $CI->clients_model->get_contact($rel_id);
+        } else {
+            $where_contacts = db_prefix() . 'contacts.active=1';
+            if (isset($extra['client_id']) && $extra['client_id'] != '') {
+                $where_contacts .= ' AND ' . db_prefix() . 'contacts.userid=' . $extra['client_id'];
+            }
+
+            if ($CI->input->post('tickets_contacts')) {
+                if (staff_cant('view', 'customers') && get_option('staff_members_open_tickets_to_all_contacts') == 0) {
+                    $where_contacts .= ' AND ' . db_prefix() . 'contacts.userid IN (SELECT customer_id FROM ' . db_prefix() . 'customer_admins WHERE staff_id=' . get_staff_user_id() . ')';
+                }
+            }
+            if ($CI->input->post('contact_userid')) {
+                $where_contacts .= ' AND ' . db_prefix() . 'contacts.userid=' . $CI->db->escape_str($CI->input->post('contact_userid'));
+            }
+            $search = $CI->misc_model->_search_contacts($q, 0, $where_contacts);
+            $data   = $search['result'];
+        }
+    } elseif ($type == 'invoice') {
+        if ($rel_id != '') {
+            $CI->load->model('invoices_model');
+            $data = $CI->invoices_model->get($rel_id);
+        } else {
+            $search = $CI->misc_custom_model->_search_invoices($q, $customer_id, 0);
+            $data   = $search['result'];
+        }
+    } elseif ($type == 'credit_note') {
+        if ($rel_id != '') {
+            $CI->load->model('credit_notes_model');
+            $data = $CI->credit_notes_model->get($rel_id);
+        } else {
+            $search = $CI->misc_custom_model->_search_credit_notes($q, $customer_id, 0);
+            $data   = $search['result'];
+        }
+    } elseif ($type == 'estimate') {
+        if ($rel_id != '') {
+            $CI->load->model('estimates_model');
+            $data = $CI->estimates_model->get($rel_id);
+        } else {
+            $search = $CI->misc_custom_model->_search_estimates($q, $customer_id, 0);
+            $data   = $search['result'];
+        }
+    } elseif ($type == 'contract' || $type == 'contracts') {
+        $CI->load->model('contracts_model');
+
+        if ($rel_id != '') {
+            $CI->load->model('contracts_model');
+            $data = $CI->contracts_model->get($rel_id);
+        } else {
+            $search = $CI->misc_custom_model->_search_contracts($q, $customer_id, 0);
+            $data   = $search['result'];
+        }
+    } elseif ($type == 'ticket') {
+        if ($rel_id != '') {
+            $CI->load->model('tickets_model');
+            $data = $CI->tickets_model->get($rel_id);
+        } else {
+            $search = $CI->misc_custom_model->_search_tickets($q, $customer_id);
+            $data   = $search['result'];
+        }
+    } elseif ($type == 'expense' || $type == 'expenses') {
+        if ($rel_id != '') {
+            $CI->load->model('expenses_model');
+            $data = $CI->expenses_model->get($rel_id);
+        } else {
+            $search = $CI->misc_custom_model->_search_expenses($q, $customer_id);
+            $data   = $search['result'];
+        }
+    } elseif ($type == 'lead' || $type == 'leads') {
+        if ($rel_id != '') {
+            $CI->load->model('leads_model');
+            $data = $CI->leads_model->get($rel_id);
+        } else {
+            $search = $CI->misc_custom_model->_search_leads($q, $customer_id, 0, [
+                'junk' => 0,
+            ]);
+            $data = $search['result'];
+        }
+    } elseif ($type == 'proposal') {
+        if ($rel_id != '') {
+            $CI->load->model('proposals_model');
+            $data = $CI->proposals_model->get($rel_id);
+        } else {
+            $search = $CI->misc_custom_model->_search_proposals($q, $customer_id, 0);
+            $data   = $search['result'];
+        }
+    } elseif ($type == 'project') {
+        if ($rel_id != '') {
+            $CI->load->model('projects_model');
+            $data = $CI->projects_model->get($rel_id);
+        } else {
+            $where_projects = '';
+            if ($CI->input->post('customer_id')) {
+                $where_projects .= 'clientid=' . $CI->db->escape_str($CI->input->post('customer_id'));
+            }
+            $search = $CI->misc_model->_search_projects($q, 0, $where_projects);
+            $data   = $search['result'];
+        }
+    } elseif ($type == 'staff') {
+        if ($rel_id != '') {
+            $CI->load->model('staff_model');
+            $data = $CI->staff_model->get($rel_id);
+        } else {
+            $search = $CI->misc_model->_search_staff($q);
+            $data   = $search['result'];
+        }
+    } elseif ($type == 'tasks' || $type == 'task') {
+        // Tasks only have relation with custom fields when searching on top
+        if ($rel_id != '') {
+            $data = $CI->tasks_model->get($rel_id);
+        }
+    }
+
+    $data = hooks()->apply_filters('get_relation_data', $data, compact('type', 'rel_id', 'extra'));
+
+    return $data;
+}

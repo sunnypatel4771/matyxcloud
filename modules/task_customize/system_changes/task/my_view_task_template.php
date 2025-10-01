@@ -152,7 +152,7 @@ $task_custom_field_id = isset($task_custom_field['id']) ? $task_custom_field['id
                         echo '</div>';
                     }
 
-                    if($task->rel_type == 'customer'){
+                    if ($task->rel_type == 'customer') {
                         echo '<div><span class="tw-font-medium">' . _l('task_customer_related') . ':</span> <a href="' . e($task_rel_value['link']) . '" target="_blank">' . e($task_rel_value['name']) . '</a></div>';
                     }
 
@@ -1091,6 +1091,14 @@ $task_custom_field_id = isset($task_custom_field['id']) ? $task_custom_field['id
                 </h5>
             </div>
         <?php } ?>
+        <div class="task-info task-info-completed-time">
+            <h5 class="tw-inline-flex tw-items-center tw-space-x-1.5">
+                <i class="fa-regular fa-calendar fa-fw fa-lg task-info-icon"></i><?= _l('completed_time'); ?>
+                <span class="tw-text-neutral-800">
+                    <?php echo get_task_latest_completed_time($task->id); ?>
+                </span>
+            </h5>
+        </div>
         <?php foreach (get_custom_fields('tasks') as $field) { ?>
             <?php $value = get_custom_field_value($task->id, $field['id'], 'tasks');
             if ($value == '') {

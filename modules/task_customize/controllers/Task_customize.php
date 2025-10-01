@@ -705,7 +705,7 @@ class Task_customize extends AdminController
         $project_id = $this->input->post('project_id');
         $CI = &get_instance();
         $project = $CI->db->where('project_id', $project_id)->get(db_prefix() . 'project_timer')->result_array();
-      
+
         $table_data = '';
         foreach ($project as $timer) {
             $table_data .= '<tr>';
@@ -720,7 +720,7 @@ class Task_customize extends AdminController
         $response = [
             'table_data' => $table_data,
             'day_count' => get_active_days($project_id),
-             'status' => true
+            'status' => true
         ];
         echo json_encode($response);
     }
@@ -737,7 +737,7 @@ class Task_customize extends AdminController
         $project_id = $this->input->post('project_id');
 
         //check start time not small that pause time
-        if($start_time > $pause_time){
+        if ($start_time > $pause_time) {
             echo json_encode(array('success' => false, 'message' => 'Start time should be less than pause time'));
             return;
         }
@@ -747,19 +747,19 @@ class Task_customize extends AdminController
         $CI->db->where('start_time <', $pause_time);
         $CI->db->where('pause_time >', $start_time);
         $exists = $CI->db->get(db_prefix() . 'project_timer')->row();
-        if($exists){
+        if ($exists) {
             echo json_encode(array('success' => false, 'message' => 'Time slot already exists'));
             return;
         }
 
 
-        if($timer_id > 0){
+        if ($timer_id > 0) {
             $CI->db->where('id', $timer_id);
             $CI->db->update(db_prefix() . 'project_timer', [
                 'start_time' => $start_time,
                 'pause_time' => $pause_time
             ]);
-        } else{
+        } else {
             $CI->db->insert(db_prefix() . 'project_timer', [
                 'project_id' => $project_id,
                 'start_time' => $start_time,
@@ -777,7 +777,7 @@ class Task_customize extends AdminController
         $timer_id = $this->input->post('timer_id');
         $CI->db->where('id', $timer_id);
         $timer = $CI->db->get(db_prefix() . 'project_timer')->row();
-        if($timer){
+        if ($timer) {
             $date = DateTime::createFromFormat('Y-m-d H:i:s', $timer->start_time);
             $start_time = $date->format('m-d-Y h:i A');
             $date = DateTime::createFromFormat('Y-m-d H:i:s', $timer->pause_time);
@@ -805,5 +805,113 @@ class Task_customize extends AdminController
         $CI->db->where('id', $timer_id);
         $CI->db->delete(db_prefix() . 'project_timer');
         echo json_encode(array('status' => true, 'message' => 'Project timer deleted successfully'));
+    }
+
+    public function contract_bulk_action()
+    {
+        $CI = &get_instance();
+        $CI->load->model('contracts_model');
+
+        $ids          = $this->input->post('ids');
+        $mass_delete  = $this->input->post('mass_delete');
+        $contractType = $this->input->post('contract_type');
+        $dateStart    = $this->input->post('datestart');
+        $dateEnd      = $this->input->post('dateend');
+        $customFields = $this->input->post('custom_fields');
+
+        if (!is_array($ids) || empty($ids)) {
+            echo json_encode(['success' => false, 'message' => _l('no_items_selected')]);
+            return;
+        }
+
+        if (isset($customFields[0]) && is_array($customFields[0])) {
+            $customFields = ['contracts' => $customFields[0]];
+        }
+
+        if (isset($customFields['contracts']) && is_array($customFields['contracts'])) {
+            foreach ($customFields['contracts'] as $fieldId => $value) {
+                if (is_array($value)) {
+                    $customFields['contracts'][$fieldId] = array_filter($value, function ($v) {
+                        return $v !== null && $v !== '';
+                    });
+
+                    if (empty($customFields['contracts'][$fieldId])) {
+                        unset($customFields['contracts'][$fieldId]);
+                    }
+                } elseif ($value === '' || $value === null) {
+                    unset($customFields['contracts'][$fieldId]);
+                }
+            }
+
+            if (empty($customFields['contracts'])) {
+                unset($customFields['contracts']);
+            }
+        }
+
+        $affected = 0;
+
+        foreach ($ids as $id) {
+            if ($mass_delete) {
+                if ($this->contracts_model->delete($id)) {
+                    $affected++;
+                }
+            } else {
+                $update = [];
+                if ($contractType) {
+                    $update['contract_type'] = $contractType;
+                }
+                if ($dateStart) {
+                    $update['datestart'] = to_sql_date($dateStart);
+                }
+                if ($dateEnd != '') {
+                    $update['dateend'] = to_sql_date($dateEnd);
+                } else {
+                    $update['dateend'] = NULL;
+                }
+
+                if (!empty($update)) {
+                    $this->db->where('id', $id);
+                    if ($this->db->update(db_prefix() . 'contracts', $update)) {
+                        $affected++;
+                    }
+                }
+
+                $affectedRows = 0;
+                if (!empty($customFields)) {
+                    handle_custom_fields_post($id, $customFields);
+                    $affectedRows++;
+                }
+            }
+        }
+
+        $message = $mass_delete
+            ? 'Total Contracts deleted: ' . $affected
+            : 'Total Contracts updated: ' . $affected;
+
+        echo json_encode([
+            'success' => true,
+            'message' => $message
+        ]);
+    }
+
+    public function get_relation_data()
+    {
+        $CI = &get_instance();
+        $CI->load->model('misc_custom_model');
+        
+        if ($this->input->post()) {
+            $type = $this->input->post('type');
+            $customer_id = $this->input->post('customer_id');
+            $data = custom_get_relation_data($type, $customer_id, '', $this->input->post('extra'));
+            if ($this->input->post('rel_id')) {
+                $rel_id = $this->input->post('rel_id');
+            } else {
+                $rel_id = '';
+            }
+
+            $relOptions = init_relation_options($data, $type, $rel_id);
+            echo json_encode($relOptions);
+            die;
+        }
     }
 }
