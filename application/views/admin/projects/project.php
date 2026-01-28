@@ -241,8 +241,8 @@
                                 $CI = &get_instance();
                                 $CI->load->model('staff_model');
                                 $CI->load->model('clients_model');
-                         
-                             
+
+
 
 
 
@@ -558,23 +558,23 @@
                 $('.cutome_select').removeClass('hide');
 
                 $.get(admin_url + 'task_customize/get_customer_details/' + $clientSelect.selectpicker('val'), function(data) {
-                            if (data) {
-                                var data = JSON.parse(data);
-                                if (!$.isEmptyObject(data)) {
-                                    $('#cam_id').val(data.cam_id);
-                                    $('#cam_id').selectpicker('refresh');
-                                    $('#sale_rep_id').val(data.sale_rep_id);
-                                    $('#sale_rep_id').selectpicker('refresh');
-                                    $('#optimizer_id').val(data.optimizer_id);
-                                    $('#optimizer_id').selectpicker('refresh');
-                                    $('#organic_social_id').val(data.organic_social_id);
-                                    $('#organic_social_id').selectpicker('refresh');
-                                    $('#seo_lead_id').val(data.seo_lead_id);
-                                    $('#seo_lead_id').selectpicker('refresh');
+                    if (data) {
+                        var data = JSON.parse(data);
+                        if (!$.isEmptyObject(data)) {
+                            $('#cam_id').val(data.cam_id);
+                            $('#cam_id').selectpicker('refresh');
+                            $('#sale_rep_id').val(data.sale_rep_id);
+                            $('#sale_rep_id').selectpicker('refresh');
+                            $('#optimizer_id').val(data.optimizer_id);
+                            $('#optimizer_id').selectpicker('refresh');
+                            $('#organic_social_id').val(data.organic_social_id);
+                            $('#organic_social_id').selectpicker('refresh');
+                            $('#seo_lead_id').val(data.seo_lead_id);
+                            $('#seo_lead_id').selectpicker('refresh');
 
-                                }
-                            }
-                        });
+                        }
+                    }
+                });
             }
         });
 

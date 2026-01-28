@@ -1,5 +1,5 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
-<?php 
+<?php
 
 init_head(); ?>
 <div id="wrapper">
@@ -11,40 +11,54 @@ init_head(); ?>
                         <!-- filters[rules][0][id]  -->
 
                         <?php if ($type == 'landing_page') { ?>
-                            <input type="hidden" name="filters[rules][0][id]" value="status">
-                            <input type="hidden" name="filters[rules][0][value][0]" value="4">
-                            <input type="hidden" name="filters[rules][0][value][1]" value="6">
-                            <input type="hidden" name="filters[rules][0][value][2]" value="5">
-                            <input type="hidden" name="filters[rules][0][has_dynamic_value]" value="false">
-                            <input type="hidden" name="filters[rules][0][operator]" value="not_in">
-                            <input type="hidden" name="filters[rules][0][type]" value="MultiSelectRule">
-                            <input type="hidden" name="filters[rules][1][id]" value="projects_services_included">
-                            <input type="hidden" name="filters[rules][1][value][]" value="Landing Pages">
-                            <input type="hidden" name="filters[rules][1][has_dynamic_value]" value="false">
-                            <input type="hidden" name="filters[rules][1][operator]" value="in">
-                            <input type="hidden" name="filters[rules][1][type]" value="MultiSelectRule">
-                            <input type="hidden" name="filters[rules][2][id]" value="projects_service">
-                            <input type="hidden" name="filters[rules][2][value]" value="Landing Page">
-                            <input type="hidden" name="filters[rules][2][has_dynamic_value]" value="false">
-                            <input type="hidden" name="filters[rules][2][operator]" value="equal">
-                            <input type="hidden" name="filters[rules][2][type]" value="SelectRule">
+                            <input type="hidden" name="filters[rules][100][id]" value="status">
+                            <input type="hidden" name="filters[rules][100][value][0]" value="4">
+                            <input type="hidden" name="filters[rules][100][value][1]" value="6">
+                            <input type="hidden" name="filters[rules][100][value][2]" value="5">
+                            <input type="hidden" name="filters[rules][100][has_dynamic_value]" value="false">
+                            <input type="hidden" name="filters[rules][100][operator]" value="not_in">
+                            <input type="hidden" name="filters[rules][100][type]" value="MultiSelectRule">
+                            <input type="hidden" name="filters[rules][101][id]" value="projects_services_included">
+                            <input type="hidden" name="filters[rules][101][value][]" value="Landing Pages">
+                            <input type="hidden" name="filters[rules][101][has_dynamic_value]" value="false">
+                            <input type="hidden" name="filters[rules][101][operator]" value="in">
+                            <input type="hidden" name="filters[rules][101][type]" value="MultiSelectRule">
+                            <input type="hidden" name="filters[rules][102][id]" value="projects_service">
+                            <input type="hidden" name="filters[rules][102][value]" value="Landing Page">
+                            <input type="hidden" name="filters[rules][102][has_dynamic_value]" value="false">
+                            <input type="hidden" name="filters[rules][102][operator]" value="equal">
+                            <input type="hidden" name="filters[rules][102][type]" value="SelectRule">
                         <?php  } else if ($type == 'website') {  ?>
 
-                            <input type="hidden" name="filters[rules][0][id]" value="projects_services_included">
-                            <input type="hidden" name="filters[rules][0][value][]" value="Website">
-                            <input type="hidden" name="filters[rules][0][has_dynamic_value]" value="false">
-                            <input type="hidden" name="filters[rules][0][operator]" value="in">
-                            <input type="hidden" name="filters[rules][0][type]" value="MultiSelectRule">
-                            <input type="hidden" name="filters[rules][1][id]" value="status">
-                              <input type="hidden" name="filters[rules][1][value][0]" value="4">
-                            <input type="hidden" name="filters[rules][1][value][1]" value="6">
-                            <input type="hidden" name="filters[rules][1][value][2]" value="5">
-                            <input type="hidden" name="filters[rules][1][has_dynamic_value]" value="false">
-                            <input type="hidden" name="filters[rules][1][operator]" value="not_in">
-                            <input type="hidden" name="filters[rules][1][type]" value="MultiSelectRule">
+                            <input type="hidden" name="filters[rules][100][id]" value="projects_services_included">
+                            <input type="hidden" name="filters[rules][100][value][]" value="Website">
+                            <input type="hidden" name="filters[rules][100][has_dynamic_value]" value="false">
+                            <input type="hidden" name="filters[rules][100][operator]" value="in">
+                            <input type="hidden" name="filters[rules][100][type]" value="MultiSelectRule">
+                            <input type="hidden" name="filters[rules][101][id]" value="status">
+                            <input type="hidden" name="filters[rules][101][value][0]" value="4">
+                            <input type="hidden" name="filters[rules][101][value][1]" value="6">
+                            <input type="hidden" name="filters[rules][101][value][2]" value="5">
+                            <input type="hidden" name="filters[rules][101][has_dynamic_value]" value="false">
+                            <input type="hidden" name="filters[rules][101][operator]" value="not_in">
+                            <input type="hidden" name="filters[rules][101][type]" value="MultiSelectRule">
 
 
+                            <input type="hidden" name="custom_view_type" value="<?php echo $type; ?>">
                         <?php  } ?>
+                    </div>
+
+                    <div class="_buttons tw-mb-2 sm:tw-mb-4">
+                        <div class="tw-inline pull-right">
+                            <app-filters
+                                id="<?php echo $table->id(); ?>"
+                                view="<?php echo $table->viewName(); ?>"
+                                :rules="extra.projectsRules || []"
+                                :saved-filters="<?php echo $table->filtersJs(); ?>"
+                                :available-rules="<?php echo $table->rulesJs(); ?>">
+                            </app-filters>
+                        </div>
+                        <div class="clearfix"></div>
                     </div>
 
                     <div class="panel_s tw-mt-2 sm:tw-mt-4">
@@ -155,7 +169,7 @@ init_head(); ?>
         //     var custom_field_id = <?php echo PROJECT_LAUNCH_ETA; ?>;
         //     project_change_custom_notes_field_value(project_id, custom_field_id, value);
         // });
-     
+
     });
 
     // // project_mark_as function

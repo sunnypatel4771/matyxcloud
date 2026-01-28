@@ -112,7 +112,7 @@ class Tasks extends AdminController
         $this->session->set_userdata([
             'tasks_kanban_view' => $set,
         ]);
-        
+
         if ($manual == false) {
             redirect(previous_url() ?: $_SERVER['HTTP_REFERER']);
         }
@@ -276,10 +276,10 @@ class Tasks extends AdminController
     public function init_relation_tasks($rel_id, $rel_type)
     {
         if ($this->input->is_ajax_request()) {
-           App_table::find('related_tasks')->output([
+            App_table::find('related_tasks')->output([
                 'rel_id'   => $rel_id,
                 'rel_type' => $rel_type,
-           ]);
+            ]);
         }
     }
 
@@ -716,10 +716,19 @@ class Tasks extends AdminController
     {
         $task = $this->tasks_model->get($this->input->post('taskid'));
 
-        if (staff_can('edit', 'tasks') ||
-                ($task->current_user_is_creator && staff_can('create', 'tasks'))) {
+        if (
+            staff_can('edit', 'tasks') ||
+            ($task->current_user_is_creator && staff_can('create', 'tasks'))
+        ) {
+            $success = $this->tasks_model->add_task_followers($this->input->post());
+            if ($success) {
+                hooks()->do_action('task_follower_added_controller', [
+                    'task_id' => $this->input->post('taskid'),
+                    'staff_id' => $this->input->post('follower')
+                ]);
+            }
             echo json_encode([
-                'success'  => $this->tasks_model->add_task_followers($this->input->post()),
+                'success'  => $success,
                 'taskHtml' => $this->get_task_data($this->input->post('taskid'), true),
             ]);
         }
@@ -730,10 +739,19 @@ class Tasks extends AdminController
     {
         $task = $this->tasks_model->get($this->input->post('taskid'));
 
-        if (staff_can('edit', 'tasks') ||
-                ($task->current_user_is_creator && staff_can('create', 'tasks'))) {
+        if (
+            staff_can('edit', 'tasks') ||
+            ($task->current_user_is_creator && staff_can('create', 'tasks'))
+        ) {
+            $success = $this->tasks_model->add_task_assignees($this->input->post());
+            if ($success) {
+                hooks()->do_action('task_assignee_added_controller', [
+                    'task_id' => $this->input->post('taskid'),
+                    'staff_id' => $this->input->post('assignee')
+                ]);
+            }
             echo json_encode([
-                'success'  => $this->tasks_model->add_task_assignees($this->input->post()),
+                'success'  => $success,
                 'taskHtml' => $this->get_task_data($this->input->post('taskid'), true),
             ]);
         }
@@ -773,12 +791,22 @@ class Tasks extends AdminController
     {
         $task = $this->tasks_model->get($taskid);
 
-        if (staff_can('edit', 'tasks') ||
-                ($task->current_user_is_creator && staff_can('create', 'tasks'))) {
+        if (
+            staff_can('edit', 'tasks') ||
+            ($task->current_user_is_creator && staff_can('create', 'tasks'))
+        ) {
+
+            $assignee_row = $this->db->where('id', $id)->get(db_prefix() . 'task_assigned')->row();
+            $staff_id = $assignee_row ? $assignee_row->staffid : 0;
+
             $success = $this->tasks_model->remove_assignee($id, $taskid);
             $message = '';
             if ($success) {
                 $message = _l('task_assignee_removed');
+                hooks()->do_action('task_assignee_removed_controller', [
+                    'task_id' => $taskid,
+                    'staff_id' => $staff_id
+                ]);
             }
             echo json_encode([
                 'success'  => $success,
@@ -793,12 +821,22 @@ class Tasks extends AdminController
     {
         $task = $this->tasks_model->get($taskid);
 
-        if (staff_can('edit', 'tasks') ||
-                ($task->current_user_is_creator && staff_can('create', 'tasks'))) {
+        if (
+            staff_can('edit', 'tasks') ||
+            ($task->current_user_is_creator && staff_can('create', 'tasks'))
+        ) {
+
+            $follower_row = $this->db->where('id', $id)->get(db_prefix() . 'task_followers')->row();
+            $staff_id = $follower_row ? $follower_row->staffid : 0;
+
             $success = $this->tasks_model->remove_follower($id, $taskid);
             $message = '';
             if ($success) {
                 $message = _l('task_follower_removed');
+                hooks()->do_action('task_follower_removed_controller', [
+                    'task_id' => $taskid,
+                    'staff_id' => $staff_id
+                ]);
             }
             echo json_encode([
                 'success'  => $success,
@@ -817,6 +855,10 @@ class Tasks extends AdminController
             || staff_can('edit',  'tasks')
         ) {
             $success = $this->tasks_model->unmark_complete($id);
+
+            if ($success) {
+                hooks()->do_action('task_status_changed_controller', ['task_id' => $id, 'status' => 'unmarked_complete']);
+            }
 
             // Don't do this query if the action is not performed via task single
             $taskHtml = $this->input->get('single_task') === 'true' ? $this->get_task_data($id, true) : '';
@@ -846,6 +888,7 @@ class Tasks extends AdminController
             || $this->tasks_model->is_task_creator(get_staff_user_id(), $id)
             || staff_can('edit',  'tasks')
         ) {
+            $old_status = $this->tasks_model->get($id)->status;
             $success = $this->tasks_model->mark_as($status, $id);
 
             // Don't do this query if the action is not performed via task single
@@ -855,6 +898,7 @@ class Tasks extends AdminController
 
             if ($success) {
                 $message = _l('task_marked_as_success', format_task_status($status, true, true));
+                hooks()->do_action('task_status_changed_controller', ['task_id' => $id, 'old_status' => $old_status, 'new_status' => $status]);
             }
 
             echo json_encode([
@@ -882,6 +926,10 @@ class Tasks extends AdminController
             $success = $this->db->affected_rows() > 0 ? true : false;
 
             hooks()->do_action('after_update_task', $id);
+
+            if ($success) {
+                hooks()->do_action('task_priority_changed_controller', ['task_id' => $id, 'priority' => $priority_id]);
+            }
 
             // Don't do this query if the action is not performed via task single
             $taskHtml = $this->input->get('single_task') === 'true' ? $this->get_task_data($id, true) : '';
@@ -922,7 +970,20 @@ class Tasks extends AdminController
     {
         if (staff_can('edit',  'tasks')) {
             $post_data = $this->input->post();
+            $date_changed = false;
+
             foreach ($post_data as $key => $val) {
+                // Get old value before update for date fields
+                $old_value = null;
+                if (in_array($key, ['startdate', 'duedate'])) {
+                    $this->db->select($key);
+                    $this->db->where('id', $task_id);
+                    $task = $this->db->get(db_prefix() . 'tasks')->row();
+                    if ($task) {
+                        $old_value = $task->$key;
+                    }
+                }
+
                 $data = hooks()->apply_filters('before_update_task', [
                     $key => to_sql_date($val),
                 ], $task_id);
@@ -931,6 +992,25 @@ class Tasks extends AdminController
                 $this->db->update(db_prefix() . 'tasks', $data);
 
                 hooks()->do_action('after_update_task', $task_id);
+
+                // Trigger date change hook if it's a date field
+                if (in_array($key, ['startdate', 'duedate']) && $old_value !== to_sql_date($val)) {
+                    hooks()->do_action('task_date_changed_controller', [
+                        'task_id' => $task_id,
+                        'field' => $key,
+                        'old_value' => $old_value,
+                        'new_value' => to_sql_date($val)
+                    ]);
+                    $date_changed = true;
+                }
+            }
+
+            // Return taskHtml like add_task_assignees does
+            if ($date_changed) {
+                echo json_encode([
+                    'success'  => true,
+                    'taskHtml' => $this->get_task_data($task_id, true),
+                ]);
             }
         }
     }
@@ -950,9 +1030,11 @@ class Tasks extends AdminController
             set_alert('warning', $message);
         }
 
-        if (empty($_SERVER['HTTP_REFERER']) || 
-            strpos($_SERVER['HTTP_REFERER'], 'tasks/index') !== false || 
-            strpos($_SERVER['HTTP_REFERER'], 'tasks/view') !== false) {
+        if (
+            empty($_SERVER['HTTP_REFERER']) ||
+            strpos($_SERVER['HTTP_REFERER'], 'tasks/index') !== false ||
+            strpos($_SERVER['HTTP_REFERER'], 'tasks/view') !== false
+        ) {
             redirect(admin_url('tasks'));
         } else {
             redirect(previous_url() ?: $_SERVER['HTTP_REFERER']);
@@ -1018,6 +1100,9 @@ class Tasks extends AdminController
             'taskHtml' => $this->input->get('single_task') === 'true' ? $this->get_task_data($task_id, true) : '',
             'timers'   => $this->get_staff_started_timers(true),
         ]);
+
+        // Log timer tracking
+        hooks()->do_action('task_timer_tracking_controller', ['task_id' => $task_id]);
     }
 
     public function delete_user_unfinished_timesheet($id)
@@ -1055,6 +1140,13 @@ class Tasks extends AdminController
                 if ($success === true) {
                     $this->session->set_flashdata('task_single_timesheets_open', true);
                     $message = _l('updated_successfully', _l('project_timesheet'));
+
+                    // Log time update
+                    $timer_id = $this->input->post('timer_id');
+                    $timer = $this->db->where('id', $timer_id)->get(db_prefix() . 'taskstimers')->row();
+                    if ($timer) {
+                        hooks()->do_action('task_time_updated_controller', ['task_id' => $timer->task_id]);
+                    }
                 } else {
                     $message = _l('failed_to_update_timesheet');
                 }
@@ -1080,6 +1172,7 @@ class Tasks extends AdminController
         if ($success === true) {
             $this->session->set_flashdata('task_single_timesheets_open', true);
             $message = _l('added_successfully', _l('project_timesheet'));
+            hooks()->do_action('task_time_logged_controller', ['task_id' => $this->input->post('task_id')]);
         } elseif (is_array($success) && isset($success['end_time_smaller'])) {
             $message = _l('failed_to_add_project_timesheet_end_time_smaller');
         } else {
@@ -1255,9 +1348,11 @@ class Tasks extends AdminController
         if ($this->input->post() && $this->input->is_ajax_request()) {
             $payload = $this->input->post();
             $item    = $this->tasks_model->get_checklist_item($payload['checklistId']);
-            if ($item->addedfrom == get_staff_user_id()
+            if (
+                $item->addedfrom == get_staff_user_id()
                 || is_admin() ||
-                $this->tasks_model->is_task_creator(get_staff_user_id(), $payload['taskId'])) {
+                $this->tasks_model->is_task_creator(get_staff_user_id(), $payload['taskId'])
+            ) {
                 $this->tasks_model->update_checklist_assigned_staff($payload);
                 die;
             }

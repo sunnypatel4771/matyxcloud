@@ -52,6 +52,36 @@ return App_table::find('projects')
             array_push($join, 'LEFT JOIN ' . db_prefix() . 'customfieldsvalues as ctable_' . $key . ' ON ' . db_prefix() . 'projects.id = ctable_' . $key . '.relid AND ctable_' . $key . '.fieldto="' . $field['fieldto'] . '" AND ctable_' . $key . '.fieldid=' . $field['id']);
         }
 
+        $custom_view_type = $this->ci->input->post('custom_view_type');
+        if ($custom_view_type) {
+            $services_included_alias = '';
+            $project_service_alias = '';
+
+            foreach ($custom_fields as $key => $field) {
+                if ($field['slug'] == 'projects_services_included') {
+                    $services_included_alias = 'ctable_' . $key;
+                }
+                if ($field['slug'] == 'projects_service') {
+                    $project_service_alias = 'ctable_' . $key;
+                }
+            }
+
+            if ($custom_view_type == 'website') {
+                if ($services_included_alias) {
+                    array_push($where, 'AND ' . $services_included_alias . '.value LIKE "%Website%"');
+                }
+                array_push($where, 'AND ' . db_prefix() . 'projects.status NOT IN (4,6,5)');
+            } elseif ($custom_view_type == 'landing_page') {
+                if ($services_included_alias) {
+                    array_push($where, 'AND ' . $services_included_alias . '.value LIKE "%Landing Pages%"');
+                }
+                if ($project_service_alias) {
+                    array_push($where, 'AND ' . $project_service_alias . '.value = "Landing Page"');
+                }
+                array_push($where, 'AND ' . db_prefix() . 'projects.status NOT IN (4,6,5)');
+            }
+        }
+
         $aColumns = hooks()->apply_filters('projects_table_sql_columns', $aColumns);
 
         // Fix for big queries. Some hosting have max_join_limit
@@ -143,25 +173,25 @@ return App_table::find('projects')
         }
         return $output;
     })->setRules([
-        App_table_filter::new('name','TextRule')->label(_l('project_name')),
-        App_table_filter::new('start_date','DateRule')->label(_l('project_start_date')),
-        App_table_filter::new('deadline','DateRule')->label(_l('project_deadline')),
-        App_table_filter::new('billing_type','SelectRule')->label(_l('project_billing_type'))->options(function($ci) {
+        App_table_filter::new('name', 'TextRule')->label(_l('project_name')),
+        App_table_filter::new('start_date', 'DateRule')->label(_l('project_start_date')),
+        App_table_filter::new('deadline', 'DateRule')->label(_l('project_deadline')),
+        App_table_filter::new('billing_type', 'SelectRule')->label(_l('project_billing_type'))->options(function ($ci) {
             return [
-                ['value'=>1,'label'=>_l('project_billing_type_fixed_cost')],
-                ['value'=>2,'label'=>_l('project_billing_type_project_hours')],
-                ['value'=>3,'label'=>_l('project_billing_type_project_task_hours_hourly_rate')],
+                ['value' => 1, 'label' => _l('project_billing_type_fixed_cost')],
+                ['value' => 2, 'label' => _l('project_billing_type_project_hours')],
+                ['value' => 3, 'label' => _l('project_billing_type_project_task_hours_hourly_rate')],
             ];
         }),
-        App_table_filter::new('status','MultiSelectRule')->label(_l('project_status'))->options(function($ci){
-                return collect($ci->projects_model->get_project_statuses())->map(fn ($data) => [
-                    'value' => $data['id'],
-                    'label' => $data['name'],
-                ])->all();
+        App_table_filter::new('status', 'MultiSelectRule')->label(_l('project_status'))->options(function ($ci) {
+            return collect($ci->projects_model->get_project_statuses())->map(fn($data) => [
+                'value' => $data['id'],
+                'label' => $data['name'],
+            ])->all();
         }),
 
         App_table_filter::new('members', 'MultiSelectRule')->label(_l('project_members'))
-            ->isVisible(fn () => staff_can('view', 'projects'))
+            ->isVisible(fn() => staff_can('view', 'projects'))
             ->options(function ($ci) {
                 return collect($ci->projects_model->get_distinct_projects_members())->map(function ($staff) {
                     return [

@@ -93,25 +93,25 @@
                                 </a>
 
                                 <?php if (staff_can('edit', 'projects')) { ?>
-                                <div class="tw-ml-2 play_pause_section">
-                                    <?php if ($project->status != '4' && $project->status != '5') {
-                                        $this->db->where('project_id', $project->id);
-                                        $this->db->where('pause_time', null);
-                                        $active_timer = $this->db->get('tblproject_timer')->row();
+                                    <div class="tw-ml-2 play_pause_section">
+                                        <?php if ($project->status != '4' && $project->status != '5') {
+                                            $this->db->where('project_id', $project->id);
+                                            $this->db->where('pause_time', null);
+                                            $active_timer = $this->db->get('tblproject_timer')->row();
 
-                                        if ($active_timer) {
-                                            // Timer is running — show pause icon
-                                            echo '<a href="javascript:void(0);" class="btn btn-warning" onclick="toggleProjectTimer(' . $project->id . ')">
+                                            if ($active_timer) {
+                                                // Timer is running — show pause icon
+                                                echo '<a href="javascript:void(0);" class="btn btn-warning" onclick="toggleProjectTimer(' . $project->id . ')">
                                                <i class="fa fa-pause"></i>
                                                </a>';
-                                        } else {
-                                            // Timer is paused or not started — show play icon
-                                            echo '<a href="javascript:void(0);" class="btn btn-success" onclick="toggleProjectTimer(' . $project->id . ')">
+                                            } else {
+                                                // Timer is paused or not started — show play icon
+                                                echo '<a href="javascript:void(0);" class="btn btn-success" onclick="toggleProjectTimer(' . $project->id . ')">
                                                <i class="fa fa-play"></i>
                                                </a>';
-                                        }
-                                    } ?>
-                                </div>
+                                            }
+                                        } ?>
+                                    </div>
                                 <?php } ?>
                             </div>
                         </div>
@@ -451,6 +451,59 @@ echo form_hidden('project_percent', $percent);
                 }
             });
         });
+
+        $('.panel-collapse.in').prev('.panel-heading').find('.rotate-icon').addClass('rotate');
+
+        // Toggle icon rotation
+        $('.panel-collapse').on('show.bs.collapse', function() {
+            $(this).prev('.panel-heading').find('.rotate-icon').addClass('rotate');
+        }).on('hide.bs.collapse', function() {
+            $(this).prev('.panel-heading').find('.rotate-icon').removeClass('rotate');
+        });
+
+        // Allow clicking anywhere on header to toggle
+        $('.toggle-header').on('click', function() {
+            var target = $(this).data('target');
+            $(target).collapse('toggle');
+        });
+    });
+
+    var project_id = "<?php echo $project->id ?? ''; ?>";
+
+    $(document).on('blur', '.panel-body input[type="text"]', function() {
+        var field_id = $(this).attr('id');
+        var field_value = $(this).val();
+
+        $.ajax({
+            url: admin_url + 'task_customize/update_project_resource_field',
+            type: "POST",
+            data: {
+                project_id: project_id,
+                field_id: field_id,
+                field_value: field_value
+            },
+            dataType: "json",
+            success: function(response) {
+                console.log(response);
+            },
+            error: function(xhr, status, error) {
+                console.error("❌ AJAX Error:", error);
+            }
+        });
+    });
+
+    $('.search-icon').on('click', function() {
+        var inputVal = $(this).closest('.input-group').find('input').val().trim();
+
+        if (inputVal) {
+            if (!/^https?:\/\//i.test(inputVal)) {
+                inputVal = 'https://' + inputVal;
+            }
+
+            window.open(inputVal, '_blank');
+        } else {
+            alert_float('danger', 'No Url Provided!');
+        }
     });
 
     function project_mark_as_view(status, project_id) {

@@ -1158,6 +1158,8 @@ class Tasks_model extends App_Model
             hooks()->do_action('task_assignee_added', [
                 'staff_id' => $assigneeId,
                 'task_id'  => $data['taskid'],
+                'assignee_staff_id' => $data['assignee'],
+                'assigned_from' => isset($assignData['assigned_from']) ? $assignData['assigned_from'] : get_staff_user_id(),
             ]);
 
             return $assigneeId;

@@ -1,4 +1,8 @@
-<?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+<?php
+
+use GuzzleHttp\Promise\Is;
+
+defined('BASEPATH') or exit('No direct script access allowed'); ?>
 <?php echo form_open_multipart(admin_url('tasks/task' . ($id ? '/' . $id : '')), ['id' => 'task-form']); ?>
 <div class="modal fade<?php if (isset($task)) {
                             echo ' edit';
@@ -144,12 +148,15 @@
                         <hr class="-tw-mx-3.5" />
                         <?php $value = (isset($task) ? $task->name : ''); ?>
                         <?php echo render_input('name', 'task_add_edit_subject', $value); ?>
-                        <div class="task-hours<?php if (isset($task) && $task->rel_type == 'project' && total_rows(db_prefix() . 'projects', ['id' => $task->rel_id, 'billing_type' => 3]) == 0) {
-                                                    echo ' hide';
-                                                } ?>">
-                            <?php $value = (isset($task) ? $task->hourly_rate : 0); ?>
-                            <?php echo render_input('hourly_rate', 'task_hourly_rate', $value); ?>
-                        </div>
+                        <?php if (isset($id) && $id != '') { ?>
+                            <div class="task-hours<?php if (isset($task) && $task->rel_type == 'project' && total_rows(db_prefix() . 'projects', ['id' => $task->rel_id, 'billing_type' => 3]) == 0) {
+                                                        echo ' hide';
+                                                    } ?>">
+                                <?php $value = (isset($task) ? $task->hourly_rate : 0); ?>
+                                <?php echo render_input('hourly_rate', 'task_hourly_rate', $value); ?>
+                            </div>
+                        <?php } ?>
+
                         <div class="project-details<?php if ($rel_type != 'project') {
                                                         echo ' hide';
                                                     } ?>">
@@ -413,40 +420,42 @@
                             </div>
                         <?php } ?>
 
-                        <?php
-                        if (
-                            isset($task)
-                            && $task->status == Tasks_model::STATUS_COMPLETE
-                            && (staff_can('create', 'tasks') || staff_can('edit', 'tasks'))
-                        ) {
-                            echo render_datetime_input('datefinished', 'task_finished', _dt($task->datefinished));
-                        }
-                        ?>
-                        <div class="form-group checklist-templates-wrapper<?php if (count($checklistTemplates) == 0 || isset($task)) {
-                                                                                echo ' hide';
-                                                                            }  ?>">
-                            <label for="checklist_items"><?php echo _l('insert_checklist_templates'); ?></label>
-                            <select id="checklist_items" name="checklist_items[]"
-                                class="selectpicker checklist-items-template-select" multiple="1"
-                                data-none-selected-text="<?php echo _l('dropdown_non_selected_tex') ?>"
-                                data-width="100%" data-live-search="true" data-actions-box="true">
-                                <option value="" class="hide"></option>
-                                <?php foreach ($checklistTemplates as $chkTemplate) { ?>
-                                    <option value="<?php echo e($chkTemplate['id']); ?>">
-                                        <?php echo e($chkTemplate['description']); ?>
-                                    </option>
-                                <?php } ?>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <div id="inputTagsWrapper">
-                                <label for="tags" class="control-label"><i class="fa fa-tag" aria-hidden="true"></i>
-                                    <?php echo _l('tags'); ?></label>
-                                <input type="text" class="tagsinput" id="tags" name="tags"
-                                    value="<?php echo (isset($task) ? prep_tags_input(get_tags_in($task->id, 'task')) : ''); ?>"
-                                    data-role="tagsinput">
+                        <?php if (isset($id) && $id != '') { ?>
+                            <?php
+                            if (
+                                isset($task)
+                                && $task->status == Tasks_model::STATUS_COMPLETE
+                                && (staff_can('create', 'tasks') || staff_can('edit', 'tasks'))
+                            ) {
+                                echo render_datetime_input('datefinished', 'task_finished', _dt($task->datefinished));
+                            }
+                            ?>
+                            <div class="form-group checklist-templates-wrapper<?php if (count($checklistTemplates) == 0 || isset($task)) {
+                                                                                    echo ' hide';
+                                                                                }  ?>">
+                                <label for="checklist_items"><?php echo _l('insert_checklist_templates'); ?></label>
+                                <select id="checklist_items" name="checklist_items[]"
+                                    class="selectpicker checklist-items-template-select" multiple="1"
+                                    data-none-selected-text="<?php echo _l('dropdown_non_selected_tex') ?>"
+                                    data-width="100%" data-live-search="true" data-actions-box="true">
+                                    <option value="" class="hide"></option>
+                                    <?php foreach ($checklistTemplates as $chkTemplate) { ?>
+                                        <option value="<?php echo e($chkTemplate['id']); ?>">
+                                            <?php echo e($chkTemplate['description']); ?>
+                                        </option>
+                                    <?php } ?>
+                                </select>
                             </div>
-                        </div>
+                            <div class="form-group">
+                                <div id="inputTagsWrapper">
+                                    <label for="tags" class="control-label"><i class="fa fa-tag" aria-hidden="true"></i>
+                                        <?php echo _l('tags'); ?></label>
+                                    <input type="text" class="tagsinput" id="tags" name="tags"
+                                        value="<?php echo (isset($task) ? prep_tags_input(get_tags_in($task->id, 'task')) : ''); ?>"
+                                        data-role="tagsinput">
+                                </div>
+                            </div>
+                        <?php } ?>
 
                         <?php
                         $CI = &get_instance();
@@ -534,10 +543,31 @@
                             </div>
                         </div>
 
-
-
                         <?php $rel_id_custom_field = (isset($task) ? $task->id : false); ?>
                         <?php echo render_custom_fields('tasks', $rel_id_custom_field); ?>
+
+                        <div class="form-group col-md-12" id="payment_status_wrapper" style="display:none; padding-left: 1px;">
+                            <label class="control-label">Payment Status <span class="text-danger">*</span></label>
+                            <div>
+                                <label class="radio-inline">
+                                    <?php $is_paid = isset($task) ? $task->is_paid : 0; ?>
+                                    <input type="radio" name="payment_status" value="paid" <?php echo $is_paid == 1 ? 'checked' : ''; ?>> Paid
+                                </label>
+                                <label class="radio-inline">
+                                    <input type="radio" name="payment_status" value="unpaid" <?php echo $is_paid == 2 ? 'checked' : ''; ?>> Unpaid
+                                </label>
+                            </div>
+                        </div>
+
+                        <?php if (!$rel_id_custom_field) { ?>
+                            <script>
+                                $(document).ready(function() {
+                                    $('[data-fieldid="45"]').closest('.col-md-12').hide();
+                                    $('[name="custom_fields[tasks][45]"]').closest('.col-md-12').hide();
+                                });
+                            </script>
+                        <?php } ?>
+
                         <hr />
                         <p class="bold"><?php echo _l('task_add_edit_description'); ?></p>
                         <?php
@@ -784,6 +814,31 @@
                     $("#assignees").selectpicker('refresh')
                 }
             });
+
+            $('[data-fieldid="45"]').closest('.col-md-12').hide();
+            $('[name="custom_fields[tasks][45]"]').closest('.col-md-12').hide();
+
+            // Function to control visibility of the Paid/Unpaid radios
+            function togglePaymentStatus() {
+                let val10 = $('[name="custom_fields[tasks][10]"]').val();
+                let val1 = $('[name="custom_fields[tasks][1]"]').val();
+
+                if (val10 == 'Update' && val1 == 'Web') {
+                    $('#payment_status_wrapper').show();
+                    $('input[name="payment_status"]').prop('required', true);
+                } else {
+                    $('#payment_status_wrapper').hide();
+                    $('input[name="payment_status"]').prop('required', false);
+                }
+            }
+
+            // Also handle manual changes (fallback)
+            $('[name="custom_fields[tasks][10]"], [name="custom_fields[tasks][1]"]').on('change', function() {
+                togglePaymentStatus();
+            });
+
+            // Run once on page load
+            togglePaymentStatus();
 
         });
 

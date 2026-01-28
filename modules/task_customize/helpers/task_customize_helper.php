@@ -260,7 +260,7 @@ function formatDate($date)
         }
     }
 
-    return $$date; // Invalid date
+    return $date; // Invalid date
 }
 
 function update_custom_field_value($task_id, $value, $field_id)
@@ -791,13 +791,11 @@ function task_data_tables_init($aColumns, $sIndexColumn, $sTable, $join = [], $w
             }
 
             if (stripos($columnName, 'AVG(') === false && stripos($columnName, 'SUM(') === false) {
-                if (($data['columns'][$i]) && $data['columns'][$i]['searchable'] == 'true') {
+                if (isset($data['columns'][$i]) && $data['columns'][$i]['searchable'] == 'true') {
                     if (isset($searchAs[$i])) {
                         $columnName = $searchAs[$i];
                     }
 
-                    // Custom fields values are FULLTEXT and should be searched with MATCH
-                    // Not working ATM
                     if ($useMatchForCustomFieldsTableSearch === 'true' && startsWith($columnName, 'ctable_')) {
                         $sMatchCustomFields[] = $columnName;
                     } else {

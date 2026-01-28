@@ -804,6 +804,41 @@ $task_custom_field_id = isset($task_custom_field['id']) ? $task_custom_field['id
                 ?>
             </div>
         </div>
+        <hr />
+        <?php
+        $CI->db->select('tbltask_log.*, CONCAT(tblstaff.firstname, " ", tblstaff.lastname) as staff_name');
+        $CI->db->from(db_prefix() . 'task_log');
+        $CI->db->join(db_prefix() . 'staff', db_prefix() . 'staff.staffid = ' . db_prefix() . 'task_log.staff_id', 'left');
+        $CI->db->where('task_id', $task->id);
+        $CI->db->order_by('date', 'DESC');
+        $task_activity_logs = $CI->db->get()->result_array();
+        ?>
+        <a href="#" id="taskActivitySlide" onclick="slideToggle('.tasks-activity'); return false;">
+            <h4 class="mbot20 tw-font-semibold tw-text-base">
+                Task Activity
+            </h4>
+        </a>
+        <div class="tasks-activity inline-block full-width" <?= count($task_activity_logs) == 0 ? ' style="display:none"' : ''; ?>>
+            <div id="task-activity" class="mtop10">
+                <?php
+                if (count($task_activity_logs) > 0) {
+                    foreach ($task_activity_logs as $log) {
+                        echo '<div class="tc-content task-activity-item' . (strtotime($log['date']) >= strtotime('-16 hours') ? '' : '') . '">';
+                        echo '<span class="tw-text-sm text-muted">';
+                        echo '<span class="text-has-action inline-block" data-toggle="tooltip" data-title="' . e(_dt($log['date'])) . '">';
+                        echo e(time_ago($log['date']));
+                        echo '</span>:</span><br />';
+                        echo '<span class="tw-font-medium">' . e($log['staff_name']) . '</span> - ';
+                        echo '<span>' . e($log['description']) . '</span>';
+                        echo '</div>';
+                        echo '<hr class="task-info-separator" />';
+                    }
+                } else {
+                    echo '<p class="text-muted">No activity logged for this task yet.</p>';
+                }
+                ?>
+            </div>
+        </div>
     </div>
     <div class="col-md-4 task-single-col-right">
         <div class="pull-right mbot10 task-single-menu task-menu-options">
@@ -1598,8 +1633,6 @@ $task_custom_field_id = isset($task_custom_field['id']) ? $task_custom_field['id
                 if ($this.data("processing")) return;
                 $this.data("processing", true);
 
-                console.log("Event Triggered on Change:", newVal); // Debugging
-
                 $.ajax({
                     url: admin_url + "task_customize/update_custom_field_value",
                     type: "POST",
@@ -1609,7 +1642,6 @@ $task_custom_field_id = isset($task_custom_field['id']) ? $task_custom_field['id
                         field_id: field_id
                     },
                     success: function(res) {
-                        console.log("AJAX Success", res);
                         reload_tasks_tables();
                     },
                     complete: function() {

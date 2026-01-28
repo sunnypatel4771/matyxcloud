@@ -61,6 +61,91 @@ $CI->load->helper(TASK_CUSTOMIZE_MODULE_NAME . '/task_customize');
 //register languge 
 register_language_files(TASK_CUSTOMIZE_MODULE_NAME, [TASK_CUSTOMIZE_MODULE_NAME]);
 
+// hooks()->add_action('before_cron_run', 'task_customize_after_cron_run');
+
+// function task_customize_after_cron_run()
+// {
+//     $CI = &get_instance();
+//     $CI->load->model('tasks_model');
+
+//     // Get all tasks that are in "Awaiting Feedback" status
+//     $tasks = $CI->db->select('id')
+//         ->from(db_prefix() . 'tasks')
+//         ->where('status', Tasks_model::STATUS_AWAITING_FEEDBACK) // status = 2
+//         ->where('is_email_sent', 0)
+//         ->get()
+//         ->result_array();
+
+//     // Loop through each task
+//     foreach ($tasks as $task) {
+//         $task_id = $task['id'];
+
+//         // Get "Work Planned" custom field value for this task
+//         $custom_field = $CI->db->select('value')
+//             ->from(db_prefix() . 'customfieldsvalues')
+//             ->where('relid', $task_id)
+//             ->where('fieldto', 'tasks')
+//             ->where('fieldid', 45) // <-- Change this to your actual custom field ID for "Work Planned"
+//             ->get()
+//             ->row();
+
+//         if (!$custom_field || empty($custom_field->value)) {
+//             continue;
+//         }
+
+//         $work_planned_date = strtotime($custom_field->value);
+//         $current_time = time();
+
+//         if ($current_time - $work_planned_date >= 24 * 60 * 60) {
+
+//             $CI->db->insert(db_prefix() . 'task_comments', [
+//                 'taskid' => $task_id,
+//                 'staffid' => 1,
+//                 'content' => '<p>24 Hours Reminder:</p>
+//                 <p>Status is Customer Review and Work Planned Date needs to be updated for when you will follow-up with the customer.</p>',
+//                 'dateadded' => date('Y-m-d H:i:s'),
+//             ]);
+
+//             $CI->db->update(db_prefix() . 'tasks', ['is_email_sent' => 1], ['id' => $task_id]);
+
+//             $assigned_users = $CI->db->select('staffid')
+//                 ->from(db_prefix() . 'task_assigned')
+//                 ->where('taskid', $task_id)
+//                 ->get()
+//                 ->result_array();
+
+//             $assigned_user_ids = array_column($assigned_users, 'staffid');
+
+//             if (!empty($assigned_user_ids)) {
+//                 $CI->load->library('email');
+
+//                 foreach ($assigned_user_ids as $staff_id) {
+//                     // Get staff email
+//                     $staff = $CI->db->select('email')
+//                         ->from(db_prefix() . 'staff')
+//                         ->where('staffid', $staff_id)
+//                         ->get()
+//                         ->row();
+
+//                     $task_link = admin_url('tasks/view/' . $task_id);
+//                     $message = "24 Hours Reminder\n";
+//                     $message .= "Status is Customer Review and Work Planned Date needs to be updated for when you will follow-up with the customer.\n\n";
+//                     $message .= "Here is the task link: {$task_link}";
+
+//                     $CI->email->clear(true);
+//                     $CI->email->from(get_option('smtp_email'), get_option('companyname'));
+//                     $CI->email->to($staff->email);
+//                     $CI->email->subject('Reminder');
+//                     $CI->email->message($message); // converts \n to <br> for HTML emails
+
+//                     // Send email
+//                     $CI->email->send();
+//                 }
+//             }
+//         }
+//     }
+// }
+
 function task_customize_tasks_table_row_data($row, $aRow)
 {
     $row['DT_RowClass'] = '';
@@ -69,7 +154,35 @@ function task_customize_tasks_table_row_data($row, $aRow)
     } elseif ((!empty($aRow['date_picker_cvalue_2']) && $aRow['date_picker_cvalue_2'] == date('Y-m-d')) && $aRow['status'] != Tasks_model::STATUS_COMPLETE) {
         $row['DT_RowClass'] .= ' warning';
     }
-    return $row;
+
+    $temp_row = $row;
+
+    $working_days = '';
+    if (!empty($aRow['startdate']) && !empty($aRow['datefinished'])) {
+        $start = new DateTime($aRow['startdate']);
+        $end   = new DateTime($aRow['datefinished']);
+        $end->modify('+1 day');
+
+        $interval = new DatePeriod($start, new DateInterval('P1D'), $end);
+        $working_days_count = 0;
+
+        foreach ($interval as $date) {
+            if ($date->format('N') < 6) {
+                $working_days_count++;
+            }
+        }
+
+        $working_days = $working_days_count . ' day';
+    }
+
+    $before_dt_rowclass = $temp_row['DT_RowClass'];
+    unset($temp_row['DT_RowClass']);
+
+    $temp_values = array_values($temp_row);
+    array_splice($temp_values, 7, 0, [$working_days]);
+    $temp_values['DT_RowClass'] = $before_dt_rowclass;
+
+    return $temp_values;
 }
 function task_customize_module_activation_hook()
 {
@@ -470,6 +583,21 @@ function task_customize_tasks_table_columns($table_data)
 
 
     array_splice($table_data, $start_date_index + 1, 0, $work_planned);
+    // Find "duedate" index
+    $duedate_index = null;
+    foreach ($table_data as $key => $value) {
+        if ($value === "duedate" || (is_array($value) && isset($value['name']) && $value['name'] === "Due Date")) {
+            $duedate_index = $key;
+            break;
+        }
+    }
+
+    // Insert "Working Days" after duedate
+    if ($duedate_index !== null) {
+        array_splice($table_data, $duedate_index + 1, 0, ['Working Days']);
+    } else {
+        $table_data[] = 'Working Days';
+    }
 
     $table_data[] = _l('comments');
     return $table_data;
@@ -500,6 +628,14 @@ function task_customize_tasks_table_sql_columns($aColumns)
         array_splice($aColumns, $duedateIndex, 0, $elementToMove);
     }
     $aColumns[] = "2";
+
+    $duedateIndex = array_search("duedate", $aColumns);
+    if ($duedateIndex !== false) {
+        array_splice($aColumns, $duedateIndex + 1, 0, ['1']);
+    }
+
+    $aColumns[] = 'datefinished';
+
     return $aColumns;
 }
 
@@ -514,6 +650,11 @@ function task_customize_hook_app_admin_footer()
     if (strpos($viewuri, 'group=project_tasks') !== false) {
         //load
         echo '<script src="' . module_dir_url(TASK_CUSTOMIZE_MODULE_NAME, 'assets/js/project_tasks.js') . '?v=' . VERSION_TASK_CUSTOMIZE . '"></script>';
+    }
+
+    // Load task date activity handler on all admin/tasks pages
+    if (strpos($viewuri, 'admin/tasks') !== false) {
+        echo '<script src="' . module_dir_url(TASK_CUSTOMIZE_MODULE_NAME, 'assets/js/task_date_activity.js') . '?v=' . VERSION_TASK_CUSTOMIZE . '"></script>';
     }
 
     //url is http://localhost/matyxcloud/admin/projects
@@ -532,7 +673,6 @@ function task_customize_hook_app_admin_footer()
     if (strpos($viewuri, 'group=contracts') !== false) {
         echo '<script src="' . module_dir_url(TASK_CUSTOMIZE_MODULE_NAME, 'assets/js/contracts.js') . '?v=' . VERSION_TASK_CUSTOMIZE . '"></script>';
     }
-
 }
 
 
@@ -542,7 +682,7 @@ function task_customize_before_add_task($data)
 
     //check assing exits in project or not
     $CI = &get_instance();
-    if ($data['rel_type'] == 'project' && isset($data['assignees'])) {
+    if (isset($data['rel_type']) && $data['rel_type'] == 'project' && isset($data['assignees'])) {
         $project_id = $data['rel_id'];
         $task_assignees = $data['assignees'];
         $project_assignees = $CI->projects_model->get_project_members($project_id);
@@ -553,20 +693,41 @@ function task_customize_before_add_task($data)
         //update assignees
         $CI->projects_model->add_edit_members($project_data, $project_id);
     }
-    if($data['custome_customer_id'] != ''){
-        $data['clientid'] = $data['custome_customer_id'];
+
+    if (isset($data['payment_status']) && $data['payment_status'] !== '') {
+        $data['is_paid'] = '';
+        if ($data['payment_status'] == 'paid') {
+            $data['is_paid'] = 1;
+        } else if ($data['payment_status'] == 'unpaid') {
+            $data['is_paid'] = 2;
+        }
     }
-    unset($data['custome_customer_id']);
+    unset($data['payment_status']);
+
+    // if($data['custome_customer_id'] != ''){
+    //     $data['clientid'] = $data['custome_customer_id'];
+    // }
+    // unset($data['custome_customer_id']);
     return $data;
 }
 
 hooks()->add_action('before_update_task', 'task_customize_before_update_task');
 function task_customize_before_update_task($data)
 {
-    if($data['custome_customer_id'] != ''){
-        $data['clientid'] = $data['custome_customer_id'];
+    //     if($data['custome_customer_id'] != ''){
+    //         $data['clientid'] = $data['custome_customer_id'];
+    //     }
+    //     unset($data['custome_customer_id']);
+    //     return $data;
+    if (isset($data['payment_status']) && $data['payment_status'] !== '') {
+        $data['is_paid'] = '';
+        if ($data['payment_status'] == 'paid') {
+            $data['is_paid'] = 1;
+        } else if ($data['payment_status'] == 'unpaid') {
+            $data['is_paid'] = 2;
+        }
     }
-    unset($data['custome_customer_id']);
+    unset($data['payment_status']);
     return $data;
 }
 
@@ -590,8 +751,174 @@ function task_customize_task_assignee_added($data)
             $CI->projects_model->add_edit_members($project_data, $rel_id);
         }
     }
+
+    // Log task assignee addition
+    // task_customize_log_task_assignee_added($data);
 }
 
+// hooks()->add_action('task_assignee_removed', 'task_customize_log_task_assignee_removed');
+// function task_customize_log_task_assignee_removed($data)
+// {
+//     $CI = &get_instance();
+
+//     $log_data = [
+//         'task_id' => $data['task_id'],
+//         'staff_id' => $data['staff_id'],
+//         'action' => 'removed',
+//         'added_by' => get_staff_user_id(),
+//         'date' => date('Y-m-d H:i:s'),
+//     ];
+
+//     $CI->db->insert(db_prefix() . 'task_assigned_log', $log_data);
+// }
+
+// function task_customize_log_task_assignee_added($data)
+// {
+//     $CI = &get_instance();
+
+//     // Get the actual staff_id - check if it's passed in hook data, otherwise query
+//     $staff_id = isset($data['assignee_staff_id']) ? $data['assignee_staff_id'] : null;
+//     $added_by = isset($data['assigned_from']) ? $data['assigned_from'] : get_staff_user_id();
+
+//     // If staff_id is not in hook data, query from task_assigned table
+//     if (!$staff_id) {
+//         $CI->db->select('staffid, assigned_from');
+//         $CI->db->where('id', $data['staff_id']);
+//         $assignee_data = $CI->db->get(db_prefix() . 'task_assigned')->row();
+
+//         if ($assignee_data) {
+//             $staff_id = $assignee_data->staffid;
+//             if (empty($added_by)) {
+//                 $added_by = !empty($assignee_data->assigned_from) ? $assignee_data->assigned_from : get_staff_user_id();
+//             }
+//         } else {
+//             return; // Cannot log without staff_id
+//         }
+//     }
+
+//     $log_data = [
+//         'task_id' => $data['task_id'],
+//         'staff_id' => $staff_id,
+//         'action' => 'assigned',
+//         'added_by' => $added_by,
+//         'date' => date('Y-m-d H:i:s'),
+//     ];
+
+//     $CI->db->insert(db_prefix() . 'task_assigned_log', $log_data);
+// }
+
+// Register hooks
+hooks()->add_action('task_assignee_added_controller', 'task_customize_log_assignee_added');
+hooks()->add_action('task_assignee_removed_controller', 'task_customize_log_assignee_removed');
+hooks()->add_action('task_follower_added_controller', 'task_customize_log_follower_added');
+hooks()->add_action('task_follower_removed_controller', 'task_customize_log_follower_removed');
+hooks()->add_action('task_status_changed_controller', 'task_customize_log_status_changed');
+hooks()->add_action('task_priority_changed_controller', 'task_customize_log_priority_changed');
+hooks()->add_action('task_timer_tracking_controller', 'task_customize_log_timer_tracking');
+hooks()->add_action('task_time_logged_controller', 'task_customize_log_time_logged');
+hooks()->add_action('task_time_updated_controller', 'task_customize_log_time_updated');
+hooks()->add_action('task_date_changed_controller', 'task_customize_log_date_changed');
+hooks()->add_action('task_custom_field_changed_controller', 'task_customize_log_custom_field_changed');
+
+function task_customize_insert_log($task_id, $description)
+{
+    $CI = &get_instance();
+    $CI->db->insert('tbltask_log', [
+        'task_id' => $task_id,
+        'staff_id' => get_staff_user_id(),
+        'date' => date('Y-m-d H:i:s'),
+        'description' => $description
+    ]);
+}
+
+function task_customize_log_assignee_added($data)
+{
+    $staff_name = get_staff_full_name($data['staff_id']);
+    task_customize_insert_log($data['task_id'], 'Assigned new user: ' . $staff_name);
+}
+
+function task_customize_log_assignee_removed($data)
+{
+    $staff_name = get_staff_full_name($data['staff_id']);
+    task_customize_insert_log($data['task_id'], 'Removed assigned user: ' . $staff_name);
+}
+
+function task_customize_log_follower_added($data)
+{
+    $staff_name = get_staff_full_name($data['staff_id']);
+    task_customize_insert_log($data['task_id'], 'Added follower: ' . $staff_name);
+}
+
+function task_customize_log_follower_removed($data)
+{
+    $staff_name = get_staff_full_name($data['staff_id']);
+    task_customize_insert_log($data['task_id'], 'Removed follower: ' . $staff_name);
+}
+
+function task_customize_log_status_changed($data)
+{
+    $old_status_name = format_task_status($data['old_status'], true, true);
+    $new_status_name = format_task_status($data['new_status'], true, true);
+    task_customize_insert_log($data['task_id'], 'Change status from ' . $old_status_name . ' to ' . $new_status_name);
+}
+
+function task_customize_log_priority_changed($data)
+{
+    $priority_name = task_priority($data['priority']);
+    task_customize_insert_log($data['task_id'], 'Change priority to ' . $priority_name);
+}
+
+function task_customize_log_timer_tracking($data)
+{
+    task_customize_insert_log($data['task_id'], 'Update task time');
+}
+
+function task_customize_log_time_logged($data)
+{
+    task_customize_insert_log($data['task_id'], 'Add task time');
+}
+
+function task_customize_log_time_updated($data)
+{
+    task_customize_insert_log($data['task_id'], 'Update task time');
+}
+
+function task_customize_log_date_changed($data)
+{
+    $field = $data['field'];
+    $old_value = $data['old_value'];
+    $new_value = $data['new_value'];
+
+    $field_labels = [
+        'startdate' => 'Start Date',
+        'duedate' => 'Due Date'
+    ];
+
+    $field_label = isset($field_labels[$field]) ? $field_labels[$field] : $field;
+
+    $old_date_formatted = $old_value ? _d($old_value) : 'Not Set';
+    $new_date_formatted = $new_value ? _d($new_value) : 'Not Set';
+
+    task_customize_insert_log(
+        $data['task_id'],
+        'Change ' . $field_label . ' from ' . $old_date_formatted . ' to ' . $new_date_formatted
+    );
+}
+
+function task_customize_log_custom_field_changed($data)
+{
+    $field_name = isset($data['field_name']) ? $data['field_name'] : 'Custom Field';
+    $old_value = $data['old_value'];
+    $new_value = $data['new_value'];
+
+    $old_date_formatted = $old_value ? _d($old_value) : 'Not Set';
+    $new_date_formatted = $new_value ? _d($new_value) : 'Not Set';
+
+    task_customize_insert_log(
+        $data['task_id'],
+        'Change ' . $field_name . ' from ' . $old_date_formatted . ' to ' . $new_date_formatted
+    );
+}
 
 //after_customer_admins_tab
 hooks()->add_action('after_customer_billing_and_shipping_tab', 'client_add_custome_staff');

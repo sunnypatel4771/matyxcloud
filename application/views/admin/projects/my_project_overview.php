@@ -1,4 +1,36 @@
 <?php defined('BASEPATH') or exit('No direct script access allowed'); ?>
+
+<style>
+    .panel-heading {
+        background-color: #fff;
+        border-bottom: 1px solid #eee;
+        padding: 10px 15px;
+    }
+
+    .rotate-icon {
+        transition: transform 0.25s ease;
+        color: #6c757d;
+        font-size: 14px;
+    }
+
+    .rotate-icon.rotate {
+        transform: rotate(90deg);
+    }
+
+    .panel-title span {
+        color: #495057;
+        font-weight: 500;
+    }
+
+    .panel-title:hover span {
+        color: #007bff;
+    }
+
+    .custom_icon_size {
+        font-size: 15px !important;
+    }
+</style>
+
 <div class="row">
     <div class="col-md-6 project-overview-left">
         <div class="panel_s">
@@ -321,26 +353,306 @@
                 <div class="project-overview-open-tasks">
                     <div class="panel_s">
                         <div class="panel-body !tw-px-5 !tw-py-4">
-                            <div class="row">
-                                <div class="col-md-9">
-                                    <p class="bold text-dark tw-mb-2">
-                                        <span dir="ltr"><?php echo e($tasks_not_completed); ?> /
-                                            <?php echo e($total_tasks); ?></span>
-                                        <?php echo _l('project_open_tasks'); ?>
-                                    </p>
-                                    <p class="text-muted bold tw-mb-0"><?php echo e($tasks_not_completed_progress); ?>%</p>
+                            <input type="hidden" name="project_id" value="<?php echo $project->id; ?>">
+
+                            <div class="panel-group" id="resourcesAccordion">
+                                <!-- Box 1 -->
+                                <?php
+                                $getProjectResourceData = $this->db->get_where(db_prefix() . 'project_resource_data', ['project_id' => $project->id])->result();
+                                $projectResourceMap = [];
+                                foreach ($getProjectResourceData as $resource) {
+                                    $projectResourceMap[$resource->slug] = $resource->url;
+                                }
+                                ?>
+                                <div class="panel panel-default">
+                                    <div class="panel-heading toggle-header" data-toggle="collapse" data-target="#cam_resources" style="background-color: white;">
+                                        <h4 class="panel-title d-flex align-items-center mb-0" style="display: flex; align-items: center; cursor: pointer;">
+                                            <i class="fa fa-chevron-right rotate-icon mr-2" style="font-size: 15px; margin-right: 10px;"></i>
+                                            <span style="color: black;">CAM Resources</span>
+                                        </h4>
+                                    </div>
+                                    <div id="cam_resources" class="panel-collapse collapse">
+                                        <div class="panel-body">
+                                            <div class="form-group">
+                                                <label for="onboarding_form_cam">Onboarding Form</label>
+                                                <div class="input-group">
+                                                    <input type="text" name="onboarding_form_cam" id="onboarding_form_cam" value="<?php echo isset($projectResourceMap['onboarding_form_cam']) ? $projectResourceMap['onboarding_form_cam'] : ''; ?>"
+                                                        class="form-control">
+                                                    <span class="input-group-btn">
+                                                        <a href="javascript:void(0);" class="btn btn-default"> <i class="fa fa-globe custom_icon_size search-icon"></i></a>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="ghl_dashboard_cam">GHL Dashboard</label>
+                                                <div class="input-group">
+                                                    <input type="text" name="ghl_dashboard_cam" id="ghl_dashboard_cam" value="<?php echo isset($projectResourceMap['ghl_dashboard_cam']) ? $projectResourceMap['ghl_dashboard_cam'] : ''; ?>"
+                                                        class="form-control">
+                                                    <span class="input-group-btn">
+                                                        <a href="javascript:void(0);" class="btn btn-default"> <i class="fa fa-globe custom_icon_size search-icon"></i></a>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="scope_doc_cam">Scope Doc</label>
+                                                <div class="input-group">
+                                                    <input type="text" name="scope_doc_cam" id="scope_doc_cam" value="<?php echo isset($projectResourceMap['scope_doc_cam']) ? $projectResourceMap['scope_doc_cam'] : ''; ?>"
+                                                        class="form-control">
+                                                    <span class="input-group-btn">
+                                                        <a href="javascript:void(0);" class="btn btn-default"> <i class="fa fa-globe custom_icon_size search-icon"></i></a>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="col-md-3 text-right">
-                                    <i class="fa-regular fa-check-circle<?php echo $tasks_not_completed_progress >= 100 ? ' text-success' : ' text-muted'; ?>"
-                                        aria-hidden="true"></i>
+
+                                <!-- Box 2 -->
+                                <div class="panel panel-default">
+                                    <div class="panel-heading toggle-header" data-toggle="collapse" data-target="#web_resources" style="background-color: white;">
+                                        <h4 class="panel-title d-flex align-items-center mb-0" style="display: flex; align-items: center; cursor: pointer;">
+                                            <i class="fa fa-chevron-right rotate-icon mr-2" style="font-size: 15px; margin-right: 10px;"></i>
+                                            <span style="color: black;">Web Resources</span>
+                                        </h4>
+                                    </div>
+                                    <div id="web_resources" class="panel-collapse collapse">
+                                        <div class="panel-body">
+                                            <div class="form-group">
+                                                <label for="dev_site_url">Dev Site URL</label>
+                                                <div class="input-group">
+                                                    <input type="text" name="dev_site_url" id="dev_site_url" value="<?php echo isset($projectResourceMap['dev_site_url']) ? $projectResourceMap['dev_site_url'] : ''; ?>"
+                                                        class="form-control">
+                                                    <span class="input-group-btn">
+                                                        <a href="javascript:void(0);" class="btn btn-default"> <i class="fa fa-globe search-icon custom_icon_size"></i></a>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="page_copy_doc_web">Page Copy Doc</label>
+                                                <div class="input-group">
+                                                    <input type="text" name="page_copy_doc_web" id="page_copy_doc_web" value="<?php echo isset($projectResourceMap['page_copy_doc_web']) ? $projectResourceMap['page_copy_doc_web'] : ''; ?>"
+                                                        class="form-control">
+                                                    <span class="input-group-btn">
+                                                        <a href="javascript:void(0);" class="btn btn-default"> <i class="fa fa-globe search-icon custom_icon_size"></i></a>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="site_sheet_web">Sitemap Sheet</label>
+                                                <div class="input-group">
+                                                    <input type="text" name="site_sheet_web" id="site_sheet_web" value="<?php echo isset($projectResourceMap['site_sheet_web']) ? $projectResourceMap['site_sheet_web'] : ''; ?>"
+                                                        class="form-control">
+                                                    <span class="input-group-btn">
+                                                        <a href="javascript:void(0);" class="btn btn-default"> <i class="fa fa-globe search-icon custom_icon_size"></i></a>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="dns_sheet_web">DNS Sheet</label>
+                                                <div class="input-group">
+                                                    <input type="text" name="dns_sheet_web" id="dns_sheet_web" value="<?php echo isset($projectResourceMap['dns_sheet_web']) ? $projectResourceMap['dns_sheet_web'] : 'https://docs.google.com/spreadsheets/d/1IZio2ttg4l1uthtuzG99HQyzljfsRke1htj5INV1e4M/edit?usp=sharing'; ?>"
+                                                        class="form-control">
+                                                    <span class="input-group-btn">
+                                                        <a href="javascript:void(0);" class="btn btn-default"> <i class="fa fa-globe search-icon custom_icon_size"></i></a>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="drive_folder_web">Drive Folder</label>
+                                                <div class="input-group">
+                                                    <input type="text" name="drive_folder_web" id="drive_folder_web" value="<?php echo isset($projectResourceMap['drive_folder_web']) ? $projectResourceMap['drive_folder_web'] : ''; ?>"
+                                                        class="form-control">
+                                                    <span class="input-group-btn">
+                                                        <a href="javascript:void(0);" class="btn btn-default"> <i class="fa fa-globe search-icon custom_icon_size"></i></a>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="current_website_web">Current Website</label>
+                                                <div class="input-group">
+                                                    <input type="text" name="current_website_web" id="current_website_web" value="<?php echo isset($projectResourceMap['current_website_web']) ? $projectResourceMap['current_website_web'] : ''; ?>"
+                                                        class="form-control">
+                                                    <span class="input-group-btn">
+                                                        <a href="javascript:void(0);" class="btn btn-default"> <i class="fa fa-globe search-icon custom_icon_size"></i></a>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="col-md-12 mtop5">
-                                    <div class="progress no-margin progress-bar-mini">
-                                        <div class="progress-bar progress-bar-success no-percent-text not-dynamic"
-                                            role="progressbar"
-                                            aria-valuenow="<?php echo e($tasks_not_completed_progress); ?>"
-                                            aria-valuemin="0" aria-valuemax="100" style="width: 0%"
-                                            data-percent="<?php echo e($tasks_not_completed_progress); ?>">
+
+                                <!-- box 3 -->
+                                <div class="panel panel-default">
+                                    <div class="panel-heading toggle-header" data-toggle="collapse" data-target="#seo_resources" style="background-color: white;">
+                                        <h4 class="panel-title d-flex align-items-center mb-0" style="display: flex; align-items: center; cursor: pointer;">
+                                            <i class="fa fa-chevron-right rotate-icon mr-2" style="font-size: 15px; margin-right: 10px;"></i>
+                                            <span style="color: black;">SEO Resources</span>
+                                        </h4>
+                                    </div>
+                                    <div id="seo_resources" class="panel-collapse collapse">
+                                        <div class="panel-body">
+                                            <div class="form-group">
+                                                <label for="content_presentation">Content Presentation</label>
+                                                <div class="input-group">
+                                                    <input type="text" name="content_presentation" id="content_presentation" value="<?php echo isset($projectResourceMap['content_presentation']) ? $projectResourceMap['content_presentation'] : ''; ?>"
+                                                        class="form-control">
+                                                    <span class="input-group-btn">
+                                                        <a href="javascript:void(0);" class="btn btn-default"> <i class="fa fa-globe search-icon custom_icon_size"></i></a>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="audit_sheet">Audit Sheet</label>
+                                                <div class="input-group">
+                                                    <input type="text" name="audit_sheet" id="audit_sheet" value="<?php echo isset($projectResourceMap['audit_sheet']) ? $projectResourceMap['audit_sheet'] : ''; ?>"
+                                                        class="form-control">
+                                                    <span class="input-group-btn">
+                                                        <a href="javascript:void(0);" class="btn btn-default"> <i class="fa fa-globe search-icon custom_icon_size"></i></a>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- box 4 -->
+                                <div class="panel panel-default">
+                                    <div class="panel-heading toggle-header" data-toggle="collapse" data-target="#content_resources" style="background-color: white;">
+                                        <h4 class="panel-title d-flex align-items-center mb-0" style="display: flex; align-items: center; cursor: pointer;">
+                                            <i class="fa fa-chevron-right rotate-icon mr-2" style="font-size: 15px; margin-right: 10px;"></i>
+                                            <span style="color: black;">Content Resources</span>
+                                        </h4>
+                                    </div>
+                                    <div id="content_resources" class="panel-collapse collapse">
+                                        <div class="panel-body">
+                                            <div class="form-group">
+                                                <label for="content_strategy_presentation">Content Strategy Presentation</label>
+                                                <div class="input-group">
+                                                    <input type="text" name="content_strategy_presentation" id="content_strategy_presentation" value="<?php echo isset($projectResourceMap['content_strategy_presentation']) ? $projectResourceMap['content_strategy_presentation'] : ''; ?>"
+                                                        class="form-control">
+                                                    <span class="input-group-btn">
+                                                        <a href="javascript:void(0);" class="btn btn-default"> <i class="fa fa-globe search-icon custom_icon_size"></i></a>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="master_content_calendar">Master Content Calendar</label>
+                                                <div class="input-group">
+                                                    <input type="text" name="master_content_calendar" id="master_content_calendar" value="<?php echo isset($projectResourceMap['master_content_calendar']) ? $projectResourceMap['master_content_calendar'] : 'https://airtable.com/appwWcRy7scxY9WT0/shrekMsC1wd9WdN5w'; ?>"
+                                                        class="form-control">
+                                                    <span class="input-group-btn">
+                                                        <a href="javascript:void(0);" class="btn btn-default"> <i class="fa fa-globe search-icon custom_icon_size"></i></a>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="content_creation_form">Content Creation Form</label>
+                                                <div class="input-group">
+                                                    <input type="text" name="content_creation_form" id="content_creation_form" value="<?php echo isset($projectResourceMap['content_creation_form']) ? $projectResourceMap['content_creation_form'] : 'https://docs.google.com/forms/d/e/1FAIpQLSd8NDOPPogAFQsmp5LasA_9je_Rv1RI57JAWIWBB5g6ZcvB3A/viewform'; ?>"
+                                                        class="form-control">
+                                                    <span class="input-group-btn">
+                                                        <a href="javascript:void(0);" class="btn btn-default"> <i class="fa fa-globe search-icon custom_icon_size"></i></a>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="content_pipeline_backlinks">Content Pipeline Backlinks</label>
+                                                <div class="input-group">
+                                                    <input type="text" name="content_pipeline_backlinks" id="content_pipeline_backlinks" value="<?php echo isset($projectResourceMap['content_pipeline_backlinks']) ? $projectResourceMap['content_pipeline_backlinks'] : 'https://docs.google.com/spreadsheets/d/1PpTumUP54lUeRxHs4GwDcSqKlkESRFJFFOjcg8p1TXc/edit?usp=sharing'; ?>"
+                                                        class="form-control">
+                                                    <span class="input-group-btn">
+                                                        <a href="javascript:void(0);" class="btn btn-default"> <i class="fa fa-globe search-icon custom_icon_size"></i></a>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="water_treatment_content_creation_form">Water Treatment Content Creation Form</label>
+                                                <div class="input-group">
+                                                    <input type="text" name="water_treatment_content_creation_form" id="water_treatment_content_creation_form" value="<?php echo isset($projectResourceMap['water_treatment_content_creation_form']) ? $projectResourceMap['water_treatment_content_creation_form'] : 'https://forms.gle/pN9upmqNLyPagrHYAWater Treatment Content'; ?>"
+                                                        class="form-control">
+                                                    <span class="input-group-btn">
+                                                        <a href="javascript:void(0);" class="btn btn-default"> <i class="fa fa-globe search-icon custom_icon_size"></i></a>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="pipeline_backlinks">Pipeline Backlinks</label>
+                                                <div class="input-group">
+                                                    <input type="text" name="pipeline_backlinks" id="pipeline_backlinks" value="<?php echo isset($projectResourceMap['pipeline_backlinks']) ? $projectResourceMap['pipeline_backlinks'] : 'https://docs.google.com/spreadsheets/d/14sSKY2mSugRWf8g_WN-_BCzMs0yXb9oxBvgvh7wQvtI/edit?usp=sharing'; ?>"
+                                                        class="form-control">
+                                                    <span class="input-group-btn">
+                                                        <a href="javascript:void(0);" class="btn btn-default"> <i class="fa fa-globe search-icon custom_icon_size"></i></a>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="organic_content_strategy">Organic Content Strategy</label>
+                                                <div class="input-group">
+                                                    <input type="text" name="organic_content_strategy" id="organic_content_strategy" value="<?php echo isset($projectResourceMap['organic_content_strategy']) ? $projectResourceMap['organic_content_strategy'] : ''; ?>"
+                                                        class="form-control">
+                                                    <span class="input-group-btn">
+                                                        <a href="javascript:void(0);" class="btn btn-default"> <i class="fa fa-globe search-icon custom_icon_size"></i></a>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- box 5 -->
+                                <div class="panel panel-default">
+                                    <div class="panel-heading toggle-header" data-toggle="collapse" data-target="#paid_ads_resources" style="background-color: white;">
+                                        <h4 class="panel-title d-flex align-items-center mb-0" style="display: flex; align-items: center; cursor: pointer;">
+                                            <i class="fa fa-chevron-right rotate-icon mr-2" style="font-size: 15px; margin-right: 10px;"></i>
+                                            <span style="color: black;">Paid Ads Resources</span>
+                                        </h4>
+                                    </div>
+                                    <div id="paid_ads_resources" class="panel-collapse collapse">
+                                        <div class="panel-body">
+                                            <div class="form-group">
+                                                <label for="strategy_doc_url_paid_ads">Strategy Doc</label>
+                                                <div class="input-group">
+                                                    <input type="text" name="strategy_doc_url_paid_ads" id="strategy_doc_url_paid_ads" value="<?php echo isset($projectResourceMap['strategy_doc_url_paid_ads']) ? $projectResourceMap['strategy_doc_url_paid_ads'] : ''; ?>"
+                                                        class="form-control">
+                                                    <span class="input-group-btn">
+                                                        <a href="javascript:void(0);" class="btn btn-default"> <i class="fa fa-globe search-icon custom_icon_size"></i></a>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- box 6 -->
+                                <div class="panel panel-default">
+                                    <div class="panel-heading toggle-header" data-toggle="collapse" data-target="#automation_resources" style="background-color: white;">
+                                        <h4 class="panel-title d-flex align-items-center mb-0" style="display: flex; align-items: center; cursor: pointer;">
+                                            <i class="fa fa-chevron-right rotate-icon mr-2" style="font-size: 15px; margin-right: 10px;"></i>
+                                            <span style="color: black;">Automation Resources</span>
+                                        </h4>
+                                    </div>
+                                    <div id="automation_resources" class="panel-collapse collapse">
+                                        <div class="panel-body">
+                                            <div class="form-group">
+                                                <label for="page_copy_doc_url_automation">Page Copy Doc URL</label>
+                                                <div class="input-group">
+                                                    <input type="text" name="page_copy_doc_url_automation" id="page_copy_doc_url_automation" value="<?php echo isset($projectResourceMap['page_copy_doc_url_automation']) ? $projectResourceMap['page_copy_doc_url_automation'] : ''; ?>"
+                                                        class="form-control" disabled>
+                                                    <span class="input-group-btn">
+                                                        <a href="javascript:void(0);" class="btn btn-default"> <i class="fa fa-globe search-icon custom_icon_size"></i></a>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="site_sheet_url_automation">Sitemap Sheet URL</label>
+                                                <div class="input-group">
+                                                    <input type="text" name="site_sheet_url_automation" id="site_sheet_url_automation" value="<?php echo isset($projectResourceMap['site_sheet_url_automation']) ? $projectResourceMap['site_sheet_url_automation'] : ''; ?>"
+                                                        class="form-control" disabled>
+                                                    <span class="input-group-btn">
+                                                        <a href="javascript:void(0);" class="btn btn-default"> <i class="fa fa-globe search-icon custom_icon_size"></i></a>
+                                                    </span>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -349,161 +661,7 @@
                     </div>
                 </div>
             </div>
-            <?php if ($project->deadline) { ?>
-                <div class="col-md-6 project-progress-bars project-overview-days-left">
-                    <div class="panel_s">
-                        <div class="panel-body !tw-px-5 !tw-py-4">
-                            <div class="row">
-                                <div class="col-md-9">
-                                    <p class="bold text-dark tw-mb-2">
-                                        <span dir="ltr"><?php echo e($project_days_left); ?> /
-                                            <?php echo e($project_total_days); ?></span>
-                                        <?php echo _l('project_days_left'); ?>
-                                    </p>
-                                    <p class="text-muted bold tw-mb-0"><?php echo e($project_time_left_percent); ?>%</p>
-                                </div>
-                                <div class="col-md-3 text-right">
-                                    <i class="fa-regular fa-calendar-check<?php echo $project_time_left_percent >= 100 ? ' text-success' : ' text-muted'; ?>"
-                                        aria-hidden="true"></i>
-                                </div>
-                                <div class="col-md-12 mtop5">
-                                    <div class="progress no-margin progress-bar-mini">
-                                        <div class="progress-bar no-percent-text not-dynamic <?php echo ($project_time_left_percent == 0) ? 'progress-bar-warning' : 'progress-bar-success'; ?>" role="progressbar" aria-valuenow="<?php echo e($project_time_left_percent); ?>"
-                                            aria-valuemin="0" aria-valuemax="100" style="width: 0%"
-                                            data-percent="<?php echo e($project_time_left_percent); ?>">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            <?php } ?>
         </div>
-
-        <?php if (staff_can('create',  'projects')) { ?>
-            <div class="row">
-                <?php if ($project->billing_type == 3 || $project->billing_type == 2) { ?>
-                    <div class="col-md-12 project-overview-logged-hours-finance">
-                        <div class="panel_s !tw-mb-3">
-                            <div class="panel-body !tw-px-5 !tw-py-4">
-                                <div class="row">
-                                    <div class="col-md-3">
-                                        <?php
-                                        $data = $this->projects_model->total_logged_time_by_billing_type($project->id);
-                                        ?>
-                                        <p class="tw-mb-0 text-muted"><?php echo _l('project_overview_logged_hours'); ?> <span
-                                                class="bold"><?php echo e($data['logged_time']); ?></span></p>
-                                        <p class="bold font-medium tw-mb-0">
-                                            <?php echo e(app_format_money($data['total_money'], $currency)); ?></p>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <?php
-                                        $data = $this->projects_model->data_billable_time($project->id);
-                                        ?>
-                                        <p class="tw-mb-0 text-info"><?php echo _l('project_overview_billable_hours'); ?> <span
-                                                class="bold"><?php echo e($data['logged_time']); ?></span></p>
-                                        <p class="bold font-medium tw-mb-0">
-                                            <?php echo e(app_format_money($data['total_money'], $currency)); ?></p>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <?php
-                                        $data = $this->projects_model->data_billed_time($project->id);
-                                        ?>
-                                        <p class="tw-mb-0 text-success"><?php echo _l('project_overview_billed_hours'); ?> <span
-                                                class="bold"><?php echo e($data['logged_time']); ?></span></p>
-                                        <p class="bold font-medium tw-mb-0">
-                                            <?php echo e(app_format_money($data['total_money'], $currency)); ?></p>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <?php
-                                        $data = $this->projects_model->data_unbilled_time($project->id);
-                                        ?>
-                                        <p class="tw-mb-0 text-danger"><?php echo _l('project_overview_unbilled_hours'); ?>
-                                            <span class="bold"><?php echo e($data['logged_time']); ?></span>
-                                        </p>
-                                        <p class="bold font-medium tw-mb-0">
-                                            <?php echo e(app_format_money($data['total_money'], $currency)); ?></p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                <?php } ?>
-            </div>
-            <div class="row">
-                <div class="col-md-12 project-overview-expenses-finance">
-                    <div class="panel_s">
-                        <div class="panel-body !tw-px-5 !tw-py-4">
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <p class="tw-mb-0 text-muted"><?php echo _l('project_overview_expenses'); ?></p>
-                                    <p class="bold font-medium tw-mb-0">
-                                        <?php echo e(app_format_money(sum_from_table(db_prefix() . 'expenses', ['where' => ['project_id' => $project->id], 'field' => 'amount']), $currency)); ?>
-                                    </p>
-                                </div>
-                                <div class="col-md-3">
-                                    <p class="tw-mb-0 text-info"><?php echo _l('project_overview_expenses_billable'); ?></p>
-                                    <p class="bold font-medium tw-mb-0">
-                                        <?php echo e(app_format_money(sum_from_table(db_prefix() . 'expenses', ['where' => ['project_id' => $project->id, 'billable' => 1], 'field' => 'amount']), $currency)); ?>
-                                    </p>
-                                </div>
-                                <div class="col-md-3">
-                                    <p class="tw-mb-0 text-success"><?php echo _l('project_overview_expenses_billed'); ?>
-                                    </p>
-                                    <p class="bold font-medium tw-mb-0">
-                                        <?php echo e(app_format_money(sum_from_table(db_prefix() . 'expenses', ['where' => ['project_id' => $project->id, 'invoiceid !=' => 'NULL', 'billable' => 1], 'field' => 'amount']), $currency)); ?>
-                                    </p>
-                                </div>
-                                <div class="col-md-3">
-                                    <p class="tw-mb-0 text-danger"><?php echo _l('project_overview_expenses_unbilled'); ?>
-                                    </p>
-                                    <p class="bold font-medium tw-mb-0">
-                                        <?php echo e(app_format_money(sum_from_table(db_prefix() . 'expenses', ['where' => ['project_id' => $project->id, 'invoiceid IS NULL', 'billable' => 1], 'field' => 'amount']), $currency)); ?>
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        <?php } ?>
-        <div class="project-overview-timesheets-chart">
-            <div class="dropdown pull-right">
-                <a href="#" class="dropdown-toggle" type="button" id="dropdownMenuProjectLoggedTime"
-                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-                    <?php if (!$this->input->get('overview_chart')) {
-                        echo _l('this_week');
-                    } else {
-                        echo _l($this->input->get('overview_chart'));
-                    }
-                    ?>
-                    <span class="caret"></span>
-                </a>
-                <ul class="dropdown-menu" aria-labelledby="dropdownMenuProjectLoggedTime">
-                    <li><a
-                            href="<?php echo admin_url('projects/view/' . $project->id . '?group=project_overview&overview_chart=this_week'); ?>"><?php echo _l('this_week'); ?></a>
-                    </li>
-                    <li><a
-                            href="<?php echo admin_url('projects/view/' . $project->id . '?group=project_overview&overview_chart=last_week'); ?>"><?php echo _l('last_week'); ?></a>
-                    </li>
-                    <li><a
-                            href="<?php echo admin_url('projects/view/' . $project->id . '?group=project_overview&overview_chart=this_month'); ?>"><?php echo _l('this_month'); ?></a>
-                    </li>
-                    <li><a
-                            href="<?php echo admin_url('projects/view/' . $project->id . '?group=project_overview&overview_chart=last_month'); ?>"><?php echo _l('last_month'); ?></a>
-                    </li>
-                </ul>
-            </div>
-            <div class="clearfix"></div>
-            <div class="panel_s">
-                <div class="panel-body !tw-px-5 !tw-py-4">
-                    <canvas id="timesheetsChart" style="max-height:300px;" width="300" height="300"></canvas>
-                </div>
-            </div>
-        </div>
-        <?php hooks()->do_action('admin_project_overview_end_of_project_overview_right', $project) ?>
     </div>
 </div>
 
@@ -529,8 +687,6 @@
                     </div>
                 </div>
 
-
-
                 <div id="project_active_days">
                     <div class="table-responsive">
                         <table class="table table-bordered">
@@ -548,12 +704,6 @@
                                 </tr>
                             </thead>
                             <tbody class="project_overview_chart">
-
-
-
-
-                            
-
                             </tbody>
                         </table>
                     </div>
@@ -590,9 +740,6 @@
                         </div>
                     </form>
                 </div>
-
-            
-
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
                 </div>
@@ -601,11 +748,8 @@
     </div>
 </div>
 
-
-
-
-    <?php if (isset($project_overview_chart)) { ?>
-        <script>
-            var project_overview_chart = <?php echo json_encode($project_overview_chart); ?>;
-        </script>
-    <?php } ?>
+<?php if (isset($project_overview_chart)) { ?>
+    <script>
+        var project_overview_chart = <?php echo json_encode($project_overview_chart); ?>;
+    </script>
+<?php } ?>

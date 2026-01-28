@@ -129,7 +129,33 @@ class Task_customize extends AdminController
             $task_id = isset($post['task_id']) ? $post['task_id'] : '';
             $field_id = isset($post['field_id']) ? $post['field_id'] : '';
             if ($task_id != '' && is_numeric($task_id)) {
+                // Get old value for logging
+                $old_value = null;
+                if ($field_id == WORK_PLANNED || $field_id == '') {
+                    $actual_field_id = ($field_id == '') ? WORK_PLANNED : $field_id;
+                    $this->db->select('value');
+                    $this->db->where('fieldto', 'tasks');
+                    $this->db->where('relid', $task_id);
+                    $this->db->where('fieldid', $actual_field_id);
+                    $custom_field = $this->db->get(db_prefix() . 'customfieldsvalues')->row();
+                    if ($custom_field) {
+                        $old_value = $custom_field->value;
+                    }
+                }
+
                 update_custom_field_value($task_id, $value, $field_id);
+
+                // Log the change if it's Work Planned field
+                if (($field_id == WORK_PLANNED || $field_id == '') && $old_value !== formatDate($value)) {
+                    hooks()->do_action('task_custom_field_changed_controller', [
+                        'task_id' => $task_id,
+                        'field_id' => ($field_id == '') ? WORK_PLANNED : $field_id,
+                        'field_name' => 'Work Planned',
+                        'old_value' => $old_value,
+                        'new_value' => formatDate($value)
+                    ]);
+                }
+
                 exit;
             }
         }
@@ -465,6 +491,7 @@ class Task_customize extends AdminController
     {
         $type = $this->input->get('type');
         $data['type'] = $type;
+        $data['table'] = App_table::find('projects');
         $this->load->view('project_type', $data);
     }
 
@@ -898,7 +925,7 @@ class Task_customize extends AdminController
     {
         $CI = &get_instance();
         $CI->load->model('misc_custom_model');
-        
+
         if ($this->input->post()) {
             $type = $this->input->post('type');
             $customer_id = $this->input->post('customer_id');
@@ -912,6 +939,37 @@ class Task_customize extends AdminController
             $relOptions = init_relation_options($data, $type, $rel_id);
             echo json_encode($relOptions);
             die;
+        }
+    }
+
+    public function update_project_resource_field()
+    {
+        $project_id  = $this->input->post('project_id');
+        $field_id    = $this->input->post('field_id');
+        $field_value = $this->input->post('field_value');
+
+        $data = [
+            'project_id' => $project_id,
+            'slug'       => $field_id,
+            'url'        => $field_value,
+        ];
+
+        // Check if the record exists
+        $this->db->where('project_id', $project_id);
+        $this->db->where('slug', $field_id);
+        $exists = $this->db->get(db_prefix() . 'project_resource_data')->row();
+
+        if ($exists) {
+            // Update existing record
+            $this->db->where('project_id', $project_id);
+            $this->db->where('slug', $field_id);
+            $this->db->update(db_prefix() . 'project_resource_data', ['url' => $field_value]);
+
+            echo json_encode(['status' => true]);
+        } else {
+            // Insert new record
+            $this->db->insert(db_prefix() . 'project_resource_data', $data);
+            echo json_encode(['status' => true]);
         }
     }
 }
